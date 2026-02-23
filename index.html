@@ -1,55 +1,39 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>johnathan - Ultimate Edition</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>johnathan</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-            background: black;
-            font-family: Arial, sans-serif;
-        }
-        canvas {
-            display: block;
-        }
-        #menuScreen {
+        body { margin: 0; overflow: hidden; background: black; }
+        #startScreen {
             position: absolute;
             width: 100%;
             height: 100%;
-            background: radial-gradient(circle, #111 0%, #000 100%);
             display: flex;
-            flex-direction: column;
-            justify-content: center;
             align-items: center;
-            color: #ff00ff;
+            justify-content: center;
+            flex-direction: column;
+            color: white;
+            font-family: Arial;
+            background: linear-gradient(black, #111);
+            z-index: 10;
         }
         button {
             padding: 15px 30px;
-            margin: 10px;
-            font-size: 18px;
-            background: #ff00ff;
-            border: none;
-            border-radius: 10px;
-            color: white;
+            font-size: 20px;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
 
-<div id="menuScreen">
+<div id="startScreen">
     <h1>JOHNATHAN</h1>
-    <button id="startBtn">START</button>
-    <button id="shopBtn">SHOP</button>
+    <button onclick="startGame()">START</button>
 </div>
 
-<canvas id="game"></canvas>
-
-<script src="engine.js"></script>
-<script src="player.js"></script>
-<script src="world.js"></script>
-<script src="ui.js"></script>
-<script src="shop.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
+<script src="game3d.js"></script>
 
 </body>
 </html>
