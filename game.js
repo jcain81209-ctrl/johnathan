@@ -1,4 +1,4 @@
-const WEMOS_IP = "192.168.1.42"; // CHANGE THIS
+const WEMOS_IP = "192.168.1.198"; // CHANGE THIS
 
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
