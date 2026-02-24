@@ -1,35 +1,54 @@
-let scene, camera, renderer;
-let player, ground;
-let obstacles = [];
-let coins = [];
-let powerUps = [];
-let particleSystem;
+// Initialize sound effects
+const audio = {
+    background: new Audio('background.mp3'),
+    jump: new Audio('jump.mp3'),
+    coin: new Audio('coin.mp3'),
+    collision: new Audio('collision.mp3'),
+    powerup: new Audio('powerup.mp3')
+};
 
-let lane = 0;
-let targetX = 0;
-let speed = 0.8;
-let score = 0;
-let highScore = localStorage.getItem("highScore") || 0;
+// Set volume for all sounds (optional, adjust for balance)
+audio.background.volume = 0.3;
+audio.jump.volume = 0.5;
+audio.coin.volume = 0.7;
+audio.collision.volume = 0.6;
+audio.powerup.volume = 0.6;
 
-let gameRunning = false;
-let paused = false;
+// Start background music (looped)
+function startBackgroundMusic() {
+    audio.background.loop = true;
+    audio.background.play();
+}
 
-let velocityY = 0;
-let gravity = -0.02;
-let jumping = false;
-let sliding = false;
+// Stop background music (for game over or pause)
+function stopBackgroundMusic() {
+    audio.background.pause();
+    audio.background.currentTime = 0;
+}
 
-let powerUpTimer = 0;
-let currentPowerUp = null;
+// Trigger jump sound
+function playJumpSound() {
+    audio.jump.play();
+}
 
-let combo = 1;
-let maxCombo = 1;
+// Trigger coin collection sound
+function playCoinSound() {
+    audio.coin.play();
+}
 
-let isShaking = false;
-let shakeAmount = 0;
+// Trigger collision sound
+function playCollisionSound() {
+    audio.collision.play();
+}
 
-init();
-animate();
+// Trigger power-up collection sound
+function playPowerUpSound() {
+    audio.powerup.play();
+}
+
+// ======================
+// Updated Game Loop
+// ======================
 
 function init() {
     scene = new THREE.Scene();
@@ -61,64 +80,37 @@ function init() {
 
     document.getElementById("highScore").innerText = highScore;
     document.getElementById("score").innerText = score;
-    document.getElementById("combo").innerText = `Combo: x${combo}`;
+
+    // Start background music
+    startBackgroundMusic();
 }
 
-function createGround() {
-    const geo = new THREE.PlaneGeometry(20, 2000);
-    const mat = new THREE.MeshStandardMaterial({ color: 0x654321 });
-    const ground = new THREE.Mesh(geo, mat);
-    ground.rotation.x = -Math.PI / 2;
-    ground.position.z = -1000;
-    scene.add(ground);
-}
+// ======================
+// Game Events Triggering Sounds
+// ======================
 
-function createPlayer() {
-    const geo = new THREE.BoxGeometry(1.5, 2, 1.5);
-    const mat = new THREE.MeshStandardMaterial({ color: 0xdedede });
-    player = new THREE.Mesh(geo, mat);
-    player.position.y = 1;
-    scene.add(player);
-}
-
-function startGame() {
-    gameRunning = true;
-    document.getElementById("startScreen").style.display = "none";
-    document.getElementById("pauseBtn").style.display = "block";
-    spawnObstacle();
-    spawnCoin();
-    spawnPowerUp();
-}
-
-function togglePause() {
-    paused = !paused;
-}
-
-function handleKey(e) {
+function spawnCoin() {
     if (!gameRunning) return;
 
-    if (e.key === "ArrowLeft") lane = Math.max(-1, lane - 1);
-    if (e.key === "ArrowRight") lane = Math.min(1, lane + 1);
-    if (e.key === "ArrowUp" && !jumping) {
-        velocityY = 0.35;
-        jumping = true;
-    }
-    if (e.key === "ArrowDown" && !sliding) {
-        sliding = true;
-        setTimeout(() => { sliding = false; }, 500); // slide duration
-    }
-}
+    const geo = new THREE.TorusGeometry(0.7, 0.3, 16, 100);
+    const mat = new THREE.MeshStandardMaterial({ color: 0xffd700 });
+    const coin = new THREE.Mesh(geo, mat);
 
-function handleTouch(e) {
-    if (!gameRunning) return;
+    const randomLane = Math.floor(Math.random() * 3) - 1;
+    coin.position.x = randomLane * 4;
+    coin.position.y = 2;
+    coin.position.z = -250;
 
-    const x = e.touches[0].clientX;
-    if (x < window.innerWidth / 3) lane = Math.max(-1, lane - 1);
-    else if (x > window.innerWidth * 2 / 3) lane = Math.min(1, lane + 1);
-    else if (!jumping) {
-        velocityY = 0.35;
-        jumping = true;
-    }
+    scene.add(coin);
+    coins.push(coin);
+
+    // Play coin collection sound when coin is collected
+    coin.collection = function () {
+        playCoinSound();
+        score += 10;
+    };
+
+    setTimeout(spawnCoin, 1000);
 }
 
 function spawnObstacle() {
@@ -136,25 +128,13 @@ function spawnObstacle() {
     scene.add(obstacle);
     obstacles.push(obstacle);
 
+    // Trigger collision sound on obstacle hit
+    obstacle.collide = function () {
+        playCollisionSound();
+        endGame();
+    };
+
     setTimeout(spawnObstacle, 1500);
-}
-
-function spawnCoin() {
-    if (!gameRunning) return;
-
-    const geo = new THREE.TorusGeometry(0.7, 0.3, 16, 100);
-    const mat = new THREE.MeshStandardMaterial({ color: 0xffd700 });
-    const coin = new THREE.Mesh(geo, mat);
-
-    const randomLane = Math.floor(Math.random() * 3) - 1;
-    coin.position.x = randomLane * 4;
-    coin.position.y = 2;
-    coin.position.z = -250;
-
-    scene.add(coin);
-    coins.push(coin);
-
-    setTimeout(spawnCoin, 1000);
 }
 
 function spawnPowerUp() {
@@ -172,13 +152,24 @@ function spawnPowerUp() {
     scene.add(powerUp);
     powerUps.push(powerUp);
 
+    // Play power-up sound when collected
+    powerUp.collect = function () {
+        playPowerUpSound();
+        speed += 0.5;
+    };
+
     setTimeout(spawnPowerUp, 5000);
 }
+
+// ======================
+// Main Game Loop: Handling Sounds and Animations
+// ======================
 
 function animate() {
     requestAnimationFrame(animate);
 
     if (gameRunning && !paused) {
+
         speed += 0.0002;
 
         targetX = lane * 4;
@@ -205,7 +196,7 @@ function animate() {
             if (Math.abs(o.position.z) < 1 &&
                 Math.abs(o.position.x - player.position.x) < 1 &&
                 player.position.y < 2) {
-                endGame();
+                o.collide();
             }
 
             if (o.position.z > 10) {
@@ -220,7 +211,7 @@ function animate() {
 
             if (Math.abs(c.position.z) < 1 &&
                 Math.abs(c.position.x - player.position.x) < 1) {
-                score += 10;
+                c.collection();
                 scene.remove(c);
                 coins.splice(i, 1);
             }
@@ -236,7 +227,7 @@ function animate() {
 
             if (Math.abs(p.position.z) < 1 &&
                 Math.abs(p.position.x - player.position.x) < 1) {
-                speed += 0.5;
+                p.collect();
                 scene.remove(p);
                 powerUps.splice(i, 1);
             }
@@ -248,7 +239,6 @@ function animate() {
         });
 
         document.getElementById("score").innerText = score;
-        document.getElementById("combo").innerText = `Combo: x${combo}`;
     }
 
     renderer.render(scene, camera);
@@ -256,10 +246,13 @@ function animate() {
 
 function endGame() {
     gameRunning = false;
+    stopBackgroundMusic(); // Stop background music on game over
     if (score > highScore) {
         highScore = score;
         localStorage.setItem("highScore", highScore);
     }
+    document.getElementById("highScore").innerText = highScore;
     alert("Game Over! Score: " + score);
-    location.reload();
+    document.getElementById("startScreen").style.display = "flex"; // Restart game
+    document.getElementById("pauseBtn").style.display = "none";
 }
