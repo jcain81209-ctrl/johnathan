@@ -80,34 +80,56 @@ function drawJungleBackground() {
 
   const sky = ctx.createLinearGradient(0, 0, 0, h);
   sky.addColorStop(0, '#000000');
-  sky.addColorStop(0.45, '#08120f');
-  sky.addColorStop(1, '#0c1a13');
+  sky.addColorStop(0.42, '#040b08');
+  sky.addColorStop(1, '#07130f');
   ctx.fillStyle = sky;
   ctx.fillRect(0, 0, w, h);
 
-  ctx.fillStyle = 'rgba(215, 255, 220, 0.16)';
+  // Cold moon glow
+  ctx.fillStyle = 'rgba(188, 255, 223, 0.12)';
   ctx.beginPath();
-  ctx.arc(w * 0.82, h * 0.16, Math.min(w, h) * 0.065, 0, Math.PI * 2);
+  ctx.arc(w * 0.79, h * 0.15, Math.min(w, h) * 0.07, 0, Math.PI * 2);
   ctx.fill();
 
-  for (let layer = 0; layer < 3; layer += 1) {
-    const yBase = h * (0.44 + layer * 0.14);
-    for (let i = 0; i < 16; i += 1) {
-      const x = (i / 15) * w + ((layer * 19) % 40) - 20;
-      const ht = 80 + layer * 40 + (i % 3) * 16;
-      ctx.fillStyle = layer === 0 ? '#0e2c1a' : layer === 1 ? '#0d2818' : '#102616';
+  // Silhouette layers
+  for (let layer = 0; layer < 4; layer += 1) {
+    const yBase = h * (0.38 + layer * 0.13);
+    for (let i = 0; i < 17; i += 1) {
+      const x = (i / 16) * w + ((layer * 23) % 44) - 20;
+      const ht = 92 + layer * 42 + (i % 4) * 18;
+      ctx.fillStyle = ['#08160f', '#0a1e14', '#0d2619', '#102a1c'][layer];
       ctx.beginPath();
-      ctx.moveTo(x - 26, h);
-      ctx.lineTo(x + 24, h);
-      ctx.lineTo(x + 8, yBase - ht);
-      ctx.lineTo(x - 10, yBase - ht + 20);
+      ctx.moveTo(x - 28, h);
+      ctx.lineTo(x + 26, h);
+      ctx.lineTo(x + 9, yBase - ht);
+      ctx.lineTo(x - 11, yBase - ht + 24);
       ctx.closePath();
       ctx.fill();
     }
   }
 
-  ctx.fillStyle = 'rgba(24, 45, 32, 0.45)';
-  ctx.fillRect(0, h * 0.55, w, h * 0.5);
+  // Creepy glowing eyes in distance
+  for (let i = 0; i < 9; i += 1) {
+    const ex = (i + 1) * (w / 10) + (i % 2 ? 20 : -14);
+    const ey = h * (0.48 + (i % 3) * 0.03);
+    const glow = 0.2 + (i % 3) * 0.08;
+    ctx.fillStyle = `rgba(123, 255, 170, ${glow})`;
+    ctx.beginPath();
+    ctx.arc(ex - 5, ey, 2.2, 0, Math.PI * 2);
+    ctx.arc(ex + 5, ey, 2.2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Ground mist
+  for (let m = 0; m < 6; m += 1) {
+    const y = h * (0.55 + m * 0.06);
+    const mist = ctx.createLinearGradient(0, y, w, y);
+    mist.addColorStop(0, 'rgba(20, 70, 45, 0)');
+    mist.addColorStop(0.5, 'rgba(24, 85, 55, 0.12)');
+    mist.addColorStop(1, 'rgba(20, 70, 45, 0)');
+    ctx.fillStyle = mist;
+    ctx.fillRect(0, y, w, 24);
+  }
 }
 
 function drawSideTrees() {
@@ -117,9 +139,9 @@ function drawSideTrees() {
     [left, right].forEach((p, idx) => {
       const trunkW = p.scale * 17;
       const trunkH = p.scale * 76;
-      ctx.fillStyle = '#3f2f1e';
+      ctx.fillStyle = '#2f2317';
       ctx.fillRect(p.x - trunkW / 2, p.y - trunkH, trunkW, trunkH);
-      ctx.fillStyle = idx ? 'rgba(28,73,39,0.9)' : 'rgba(34,83,45,0.9)';
+      ctx.fillStyle = idx ? 'rgba(16,55,33,0.95)' : 'rgba(22,66,40,0.95)';
       ctx.beginPath();
       ctx.arc(p.x, p.y - trunkH - p.scale * 16, p.scale * 24, 0, Math.PI * 2);
       ctx.fill();
@@ -159,11 +181,11 @@ function drawRoad() {
     ctx.lineTo(far.x + wf, far.y);
     ctx.lineTo(far.x - wf, far.y);
     ctx.closePath();
-    ctx.fillStyle = z % 2 === 0 ? '#7e5b3a' : '#714f31';
+    ctx.fillStyle = z % 2 === 0 ? '#5b4a37' : '#4f3f2f';
     ctx.fill();
 
     if (z % 2 === 0) {
-      ctx.strokeStyle = 'rgba(29, 20, 12, 0.55)';
+      ctx.strokeStyle = 'rgba(16, 12, 9, 0.7)';
       ctx.lineWidth = Math.max(1, near.scale * 2.2);
       ctx.stroke();
     }
@@ -173,7 +195,7 @@ function drawRoad() {
       const seamR = project(-0.33, z + 1);
       const seamL2 = project(0.33, z);
       const seamR2 = project(0.33, z + 1);
-      ctx.strokeStyle = 'rgba(23, 15, 10, 0.52)';
+      ctx.strokeStyle = 'rgba(11, 9, 7, 0.75)';
       ctx.lineWidth = Math.max(1, near.scale * 1.8);
       ctx.beginPath();
       ctx.moveTo(seamL.x, seamL.y);
