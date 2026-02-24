@@ -8,7 +8,7 @@
         body {
             margin: 0;
             overflow: hidden;
-            background: #2E8B57;
+            background: #222;
             font-family: Arial, sans-serif;
         }
         #startScreen {
@@ -51,6 +51,22 @@
             font-size: 20px;
             z-index: 15;
         }
+        #highScoreText {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            color: white;
+            font-size: 20px;
+            z-index: 15;
+        }
+        #combo {
+            position: fixed;
+            top: 40px;
+            right: 10px;
+            color: yellow;
+            font-size: 20px;
+            z-index: 15;
+        }
     </style>
 </head>
 <body>
@@ -64,10 +80,10 @@
 
 <div id="hud">
     Score: <span id="score">0</span><br>
-    Combo: <span id="combo">x1</span>
 </div>
 
 <div id="highScoreText">High Score: <span id="highScore">0</span></div>
+<div id="combo">Combo: x1</div>
 
 <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
 <script src="game3d.js"></script>
