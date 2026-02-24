@@ -22,9 +22,9 @@ const ui = {
   gameShell: document.getElementById('gameShell')
 };
 
-const LANE_X = [-1, 0, 1];
+const LANE_X = [-0.62, 0, 0.62];
 const MAX_Z = 68;
-const PLAYER_Z = 3.2;
+const PLAYER_Z = 3.85;
 const BEST_KEY = 'templeSprintNightmareBest';
 
 const FX_LEVEL = {
@@ -161,7 +161,7 @@ function project(x, z, y = 0) {
   const zn = Math.max(0.2, z / MAX_Z);
   const s = 1 / zn;
   return {
-    x: w * 0.5 + x * s * w * 0.14,
+    x: w * 0.5 + x * s * w * 0.108,
     y: h * 0.84 - y * s * h * 0.17,
     scale: s
   };
@@ -548,61 +548,73 @@ function drawRunnerShadow(p, s) {
 }
 
 function drawRunnerBody(p, s) {
+  const x = clamp(p.x, 24, window.innerWidth - 24);
+
   if (state.slideT > 0) {
-    ctx.fillStyle = '#d7d2c4';
+    ctx.fillStyle = '#d6d0be';
     ctx.beginPath();
-    ctx.ellipse(p.x, p.y - s * 0.32, s * 0.78, s * 0.35, 0, 0, Math.PI * 2);
+    ctx.ellipse(x, p.y - s * 0.3, s * 0.74, s * 0.34, 0, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = '#9d6140';
+    ctx.fillStyle = '#d86f43';
     ctx.beginPath();
-    ctx.arc(p.x + s * 0.5, p.y - s * 0.42, s * 0.16, 0, Math.PI * 2);
+    ctx.arc(x + s * 0.44, p.y - s * 0.41, s * 0.15, 0, Math.PI * 2);
     ctx.fill();
     return;
   }
 
-  // torso
-  ctx.fillStyle = '#dbd6c8';
-  ctx.beginPath();
-  ctx.moveTo(p.x - s * 0.28, p.y - s * 0.1);
-  ctx.quadraticCurveTo(p.x - s * 0.38, p.y - s * 0.72, p.x, p.y - s * 1.0);
-  ctx.quadraticCurveTo(p.x + s * 0.38, p.y - s * 0.72, p.x + s * 0.28, p.y - s * 0.1);
-  ctx.quadraticCurveTo(p.x, p.y + s * 0.18, p.x - s * 0.28, p.y - s * 0.1);
-  ctx.fill();
-
-  // head
-  ctx.fillStyle = '#8f5a3a';
-  ctx.beginPath();
-  ctx.arc(p.x, p.y - s * 1.18, s * 0.19, 0, Math.PI * 2);
-  ctx.fill();
-
-  // arms
-  ctx.strokeStyle = '#4f3026';
-  ctx.lineWidth = Math.max(2, s * 0.12);
+  // jeans legs
+  ctx.strokeStyle = '#2f4c52';
+  ctx.lineWidth = Math.max(2, s * 0.15);
   ctx.lineCap = 'round';
   ctx.beginPath();
-  ctx.moveTo(p.x - s * 0.18, p.y - s * 0.6);
-  ctx.lineTo(p.x - s * 0.46, p.y - s * 0.35);
-  ctx.moveTo(p.x + s * 0.18, p.y - s * 0.6);
-  ctx.lineTo(p.x + s * 0.46, p.y - s * 0.3);
+  ctx.moveTo(x - s * 0.09, p.y + s * 0.08);
+  ctx.lineTo(x - s * 0.17, p.y + s * 0.96);
+  ctx.moveTo(x + s * 0.09, p.y + s * 0.08);
+  ctx.lineTo(x + s * 0.21, p.y + s * 0.95);
   ctx.stroke();
 
-  // legs
-  ctx.strokeStyle = '#2b3038';
-  ctx.lineWidth = Math.max(2, s * 0.14);
+  // torso shirt
+  ctx.fillStyle = '#d8c79c';
   ctx.beginPath();
-  ctx.moveTo(p.x - s * 0.08, p.y + s * 0.1);
-  ctx.lineTo(p.x - s * 0.18, p.y + s * 0.95);
-  ctx.moveTo(p.x + s * 0.08, p.y + s * 0.1);
-  ctx.lineTo(p.x + s * 0.2, p.y + s * 0.95);
+  ctx.moveTo(x - s * 0.3, p.y - s * 0.08);
+  ctx.quadraticCurveTo(x - s * 0.37, p.y - s * 0.71, x, p.y - s * 1.0);
+  ctx.quadraticCurveTo(x + s * 0.37, p.y - s * 0.71, x + s * 0.3, p.y - s * 0.08);
+  ctx.quadraticCurveTo(x, p.y + s * 0.2, x - s * 0.3, p.y - s * 0.08);
+  ctx.fill();
+
+  // belt
+  ctx.fillStyle = '#6a4a34';
+  ctx.fillRect(x - s * 0.24, p.y - s * 0.06, s * 0.48, s * 0.08);
+  ctx.fillStyle = '#b07a3f';
+  ctx.fillRect(x - s * 0.03, p.y - s * 0.055, s * 0.06, s * 0.05);
+
+  // arms
+  ctx.strokeStyle = '#c79e76';
+  ctx.lineWidth = Math.max(2, s * 0.11);
+  ctx.beginPath();
+  ctx.moveTo(x - s * 0.18, p.y - s * 0.6);
+  ctx.lineTo(x - s * 0.44, p.y - s * 0.34);
+  ctx.moveTo(x + s * 0.18, p.y - s * 0.6);
+  ctx.lineTo(x + s * 0.45, p.y - s * 0.31);
   ctx.stroke();
 
-  // chest sash
-  ctx.strokeStyle = '#b74130';
-  ctx.lineWidth = Math.max(2, s * 0.08);
+  // head
+  ctx.fillStyle = '#edc9a7';
   ctx.beginPath();
-  ctx.moveTo(p.x - s * 0.2, p.y - s * 0.76);
-  ctx.lineTo(p.x + s * 0.2, p.y - s * 0.24);
-  ctx.stroke();
+  ctx.ellipse(x, p.y - s * 1.2, s * 0.18, s * 0.21, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // hair
+  ctx.fillStyle = '#c45a30';
+  ctx.beginPath();
+  ctx.arc(x, p.y - s * 1.28, s * 0.18, Math.PI, Math.PI * 2);
+  ctx.fill();
+
+  // glove hint
+  ctx.fillStyle = '#3a2b24';
+  ctx.beginPath();
+  ctx.arc(x - s * 0.44, p.y - s * 0.33, s * 0.06, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 function drawRunnerAura(p, s) {
@@ -825,27 +837,27 @@ function updateAtmosphere(dt) {
 
 function updateHud() {
   const total = Math.floor(state.score + state.coins * 11 + state.bestCombo * 5);
-  ui.score.textContent = String(total);
-  ui.coins.textContent = String(state.coins);
-  ui.speed.textContent = `${(state.speed / 16).toFixed(1)}x`;
-  ui.combo.textContent = String(state.combo);
-  ui.streak.textContent = String(state.streak);
-  ui.best.textContent = localStorage.getItem(BEST_KEY) || '0';
+  if (ui.score) ui.score.textContent = String(total);
+  if (ui.coins) ui.coins.textContent = String(state.coins);
+  if (ui.speed) ui.speed.textContent = `${(state.speed / 16).toFixed(1)}x`;
+  if (ui.combo) ui.combo.textContent = String(state.combo);
+  if (ui.streak) ui.streak.textContent = String(state.streak);
+  if (ui.best) ui.best.textContent = localStorage.getItem(BEST_KEY) || '0';
 }
 
 function triggerGameOver() {
   state.running = false;
   state.gameOver = true;
-  ui.pauseBtn.disabled = true;
+  if (ui.pauseBtn) ui.pauseBtn.disabled = true;
 
   const total = Math.floor(state.score + state.coins * 11 + state.bestCombo * 5);
   const best = Number(localStorage.getItem(BEST_KEY) || 0);
   if (total > best) localStorage.setItem(BEST_KEY, String(total));
 
-  ui.finalScore.textContent = String(total);
-  ui.finalCoins.textContent = String(state.coins);
-  ui.finalCombo.textContent = String(state.bestCombo);
-  ui.over.classList.remove('hidden');
+  if (ui.finalScore) ui.finalScore.textContent = String(total);
+  if (ui.finalCoins) ui.finalCoins.textContent = String(state.coins);
+  if (ui.finalCombo) ui.finalCombo.textContent = String(state.bestCombo);
+  if (ui.over) ui.over.classList.remove('hidden');
   updateHud();
 }
 
@@ -919,32 +931,26 @@ function startRun() {
   state.inMenu = false;
   state.gameOver = false;
   state.paused = false;
-  ui.startMenu.classList.add('hidden');
-  ui.gameShell.classList.remove('hidden');
-  ui.over.classList.add('hidden');
-  ui.pauseBtn.disabled = false;
-  ui.pauseBtn.textContent = 'Pause';
+  if (ui.startMenu) ui.startMenu.classList.add('hidden');
+  if (ui.gameShell) ui.gameShell.classList.remove('hidden');
+  if (ui.over) ui.over.classList.add('hidden');
+  if (ui.pauseBtn) {
+    ui.pauseBtn.disabled = false;
+    ui.pauseBtn.textContent = 'Pause';
+  }
 }
 
 function restart() {
   const fx = state.fx;
   resetState();
   state.fx = fx;
-  ui.fxBtn.textContent = `FX: ${state.fx}`;
+  if (ui.fxBtn) ui.fxBtn.textContent = `FX: ${state.fx}`;
   startRun();
   updateHud();
 }
 
 function backToMenu() {
-  const fx = state.fx;
-  resetState();
-  state.fx = fx;
-  ui.fxBtn.textContent = `FX: ${state.fx}`;
-  ui.over.classList.add('hidden');
-  ui.gameShell.classList.add('hidden');
-  ui.startMenu.classList.remove('hidden');
-  ui.pauseBtn.disabled = true;
-  updateHud();
+  window.location.href = 'index.html';
 }
 
 function togglePause() {
@@ -955,14 +961,14 @@ function togglePause() {
 
 function toggleFx() {
   state.fx = state.fx === FX_LEVEL.HIGH ? FX_LEVEL.LOW : FX_LEVEL.HIGH;
-  ui.fxBtn.textContent = `FX: ${state.fx}`;
+  if (ui.fxBtn) ui.fxBtn.textContent = `FX: ${state.fx}`;
 }
 
-ui.startBtn.addEventListener('click', restart);
-ui.restartBtn.addEventListener('click', restart);
-ui.menuBtn.addEventListener('click', backToMenu);
-ui.pauseBtn.addEventListener('click', togglePause);
-ui.fxBtn.addEventListener('click', toggleFx);
+if (ui.startBtn) ui.startBtn.addEventListener('click', restart);
+if (ui.restartBtn) ui.restartBtn.addEventListener('click', restart);
+if (ui.menuBtn) ui.menuBtn.addEventListener('click', backToMenu);
+if (ui.pauseBtn) ui.pauseBtn.addEventListener('click', togglePause);
+if (ui.fxBtn) ui.fxBtn.addEventListener('click', toggleFx);
 
 window.addEventListener('keydown', (e) => {
   if (!state.running || state.gameOver) return;
@@ -1035,7 +1041,7 @@ async function enableTilt() {
   }
 }
 
-ui.tiltBtn.addEventListener('click', enableTilt);
+if (ui.tiltBtn) ui.tiltBtn.addEventListener('click', enableTilt);
 
 window.addEventListener('deviceorientation', (e) => {
   if (!tiltEnabled || !state.running || state.paused || state.gameOver) return;
@@ -1058,5 +1064,6 @@ window.addEventListener('resize', resize);
 resetState();
 resize();
 updateHud();
-ui.gameShell.classList.add('hidden');
+if (ui.gameShell && ui.startMenu) ui.gameShell.classList.add('hidden');
+if (!ui.startMenu) startRun();
 requestAnimationFrame(loop);
