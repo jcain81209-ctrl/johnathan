@@ -1,9 +1,9 @@
+// Three.js setup
 let scene, camera, renderer;
-let player;
+let player, ground;
 let obstacles = [];
 let coins = [];
 let powerUps = [];
-
 let lane = 0;
 let targetX = 0;
 let speed = 0.8;
@@ -21,23 +21,26 @@ let sliding = false;
 let powerUpTimer = 0;
 let currentPowerUp = null;
 
+let combo = 1;
+let maxCombo = 1;
+
 init();
 animate();
 
 function init() {
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x2c6b3f); // Jungle Green background
+    scene.background = new THREE.Color(0x87ceeb); // Sky blue color
 
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.set(0, 6, 10);
-    camera.lookAt(0,1,0);
+    camera.lookAt(0, 1, 0);
 
-    renderer = new THREE.WebGLRenderer({antialias:true});
+    renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
     const light = new THREE.DirectionalLight(0xffffff, 1);
-    light.position.set(5,10,7);
+    light.position.set(5, 10, 7);
     scene.add(light);
 
     const ambient = new THREE.AmbientLight(0x404040);
@@ -57,16 +60,16 @@ function init() {
 
 function createGround() {
     const geo = new THREE.PlaneGeometry(20, 2000);
-    const mat = new THREE.MeshStandardMaterial({color:0x654321});
+    const mat = new THREE.MeshStandardMaterial({ color: 0x654321 });
     const ground = new THREE.Mesh(geo, mat);
-    ground.rotation.x = -Math.PI/2;
+    ground.rotation.x = -Math.PI / 2;
     ground.position.z = -1000;
     scene.add(ground);
 }
 
 function createPlayer() {
-    const geo = new THREE.BoxGeometry(1.5,2,1.5);
-    const mat = new THREE.MeshStandardMaterial({color:0xdedede});
+    const geo = new THREE.BoxGeometry(1.5, 2, 1.5);
+    const mat = new THREE.MeshStandardMaterial({ color: 0xdedede });
     player = new THREE.Mesh(geo, mat);
     player.position.y = 1;
     scene.add(player);
@@ -88,14 +91,15 @@ function togglePause() {
 function handleKey(e) {
     if (!gameRunning) return;
 
-    if (e.key === "ArrowLeft") lane = Math.max(-1, lane-1);
-    if (e.key === "ArrowRight") lane = Math.min(1, lane+1);
+    if (e.key === "ArrowLeft") lane = Math.max(-1, lane - 1);
+    if (e.key === "ArrowRight") lane = Math.min(1, lane + 1);
     if (e.key === "ArrowUp" && !jumping) {
         velocityY = 0.35;
         jumping = true;
     }
     if (e.key === "ArrowDown" && !sliding) {
         sliding = true;
+        setTimeout(() => { sliding = false; }, 500); // slide duration
     }
 }
 
@@ -103,8 +107,8 @@ function handleTouch(e) {
     if (!gameRunning) return;
 
     const x = e.touches[0].clientX;
-    if (x < window.innerWidth / 3) lane = Math.max(-1, lane-1);
-    else if (x > window.innerWidth * 2 / 3) lane = Math.min(1, lane+1);
+    if (x < window.innerWidth / 3) lane = Math.max(-1, lane - 1);
+    else if (x > window.innerWidth * 2 / 3) lane = Math.min(1, lane + 1);
     else if (!jumping) {
         velocityY = 0.35;
         jumping = true;
@@ -169,7 +173,6 @@ function animate() {
     requestAnimationFrame(animate);
 
     if (gameRunning && !paused) {
-
         speed += 0.0002;
 
         targetX = lane * 4;
