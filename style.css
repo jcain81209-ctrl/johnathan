@@ -31,6 +31,12 @@ body {
   height: 100vh;
 }
 
+.standalone-menu {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+}
+
 #game {
   position: absolute;
   inset: 0;
@@ -95,6 +101,7 @@ body {
 }
 
 .hud {
+  pointer-events: none;
   position: absolute;
   top: max(10px, env(safe-area-inset-top));
   left: 50%;
@@ -152,6 +159,7 @@ body {
 }
 
 .game-over {
+  z-index: 9;
   place-items: center;
   align-content: center;
   text-align: center;
