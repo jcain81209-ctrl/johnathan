@@ -2,36 +2,44 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Temple Sprint</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+  <title>Temple Sprint: Jungle Escape</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <main class="game-shell">
     <canvas id="game" aria-label="Temple Sprint game canvas"></canvas>
 
-    <section class="hud">
-      <div class="pill">Score: <span id="score">0</span></div>
-      <div class="pill">Coins: <span id="coins">0</span></div>
-      <div class="pill">Best: <span id="best">0</span></div>
-      <div class="pill">Speed: <span id="speed">1.0x</span></div>
+    <section id="startMenu" class="start-menu">
+      <div class="menu-card">
+        <p class="menu-kicker">ENDLESS JUNGLE RUNNER</p>
+        <h1>TEMPLE SPRINT</h1>
+        <p class="menu-sub">Dash through cursed jungle ruins, leap broken roads, and chase the golden trail.</p>
+        <button id="startBtn" class="btn primary xl">Start Run</button>
+        <div class="menu-row">
+          <button id="tiltBtn" class="btn">Enable Tilt</button>
+          <button id="pauseBtn" class="btn" disabled>Pause</button>
+        </div>
+        <p class="hint">
+          Desktop: ←/→ lane, ↑/Space jump, ↓ slide, P pause.<br>
+          Mobile: Swipe + optional tilt.
+        </p>
+      </div>
     </section>
 
-    <section class="controls-overlay">
-      <button id="startBtn" class="btn primary">Start Run</button>
-      <button id="pauseBtn" class="btn" disabled>Pause</button>
-      <button id="tiltBtn" class="btn">Enable Tilt</button>
-      <p class="hint">
-        Desktop: ←/→ to switch lanes, ↑/Space to jump, ↓ to slide, P to pause.<br />
-        Mobile: Swipe for jump/slide/lane change. Optional tilt steering on supported devices.
-      </p>
+    <section class="hud">
+      <div class="pill">Score <span id="score">0</span></div>
+      <div class="pill">Coins <span id="coins">0</span></div>
+      <div class="pill">Best <span id="best">0</span></div>
+      <div class="pill">Speed <span id="speed">1.0x</span></div>
     </section>
 
     <section id="gameOver" class="game-over hidden" aria-live="polite">
-      <h1>Run Over</h1>
-      <p>Your score: <strong id="finalScore">0</strong></p>
-      <p>Coins collected: <strong id="finalCoins">0</strong></p>
+      <h2>Run Over</h2>
+      <p>Score: <strong id="finalScore">0</strong></p>
+      <p>Coins: <strong id="finalCoins">0</strong></p>
       <button id="restartBtn" class="btn primary">Run Again</button>
+      <button id="menuBtn" class="btn">Back to Menu</button>
     </section>
   </main>
 
