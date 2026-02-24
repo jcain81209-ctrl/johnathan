@@ -1,75 +1,73 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Johnathan Jungle Runner</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Temple Run: Johnathan Edition</title>
     <style>
         body {
             margin: 0;
             overflow: hidden;
-            background: #4f9b68; /* Jungle color */
+            background: #2E8B57;
             font-family: Arial, sans-serif;
         }
-
         #startScreen {
             position: absolute;
             width: 100%;
             height: 100%;
             display: flex;
             flex-direction: column;
-            align-items: center;
             justify-content: center;
+            align-items: center;
             color: white;
             z-index: 10;
         }
-
         #startBtn {
-            padding: 15px 30px;
-            font-size: 22px;
-            border: none;
-            background: #32CD32; /* Jungle green */
+            padding: 20px;
+            font-size: 24px;
+            background: #32CD32;
             color: white;
+            border: none;
             cursor: pointer;
         }
-
         #pauseBtn {
             position: fixed;
             top: 10px;
             left: 10px;
-            padding: 10px 20px;
-            font-size: 16px;
-            border: none;
-            background: #ff4500; /* Pause button red */
+            padding: 10px;
+            font-size: 18px;
+            background: #ff4500;
             color: white;
+            border: none;
             cursor: pointer;
             z-index: 20;
             display: none;
         }
-
         #hud {
             position: fixed;
             top: 10px;
             right: 10px;
-            z-index: 20;
             color: white;
-            font-size: 18px;
+            font-size: 20px;
+            z-index: 15;
         }
     </style>
 </head>
 <body>
 
 <div id="startScreen">
-    <h1>JOHNATHAN JUNGLE RUNNER</h1>
+    <h1>Johnathan Jungle Runner</h1>
     <button id="startBtn">START</button>
 </div>
 
+<button id="pauseBtn">PAUSE</button>
+
 <div id="hud">
     Score: <span id="score">0</span><br>
-    High Score: <span id="highScore">0</span>
+    Combo: <span id="combo">x1</span>
 </div>
 
-<button id="pauseBtn">PAUSE</button>
+<div id="highScoreText">High Score: <span id="highScore">0</span></div>
 
 <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
 <script src="game3d.js"></script>
