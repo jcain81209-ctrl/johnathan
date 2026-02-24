@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
-  <title>Temple Sprint: Nightmare Skill Mode</title>
+  <title>Temple Sprint: Menu</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -15,10 +15,7 @@
         Run the cursed causeway. Leap abyss fissures, dodge shattered stone, outrun the beast in the fog.
       </p>
       <div class="menu-grid">
-        <button id="startBtn" class="btn primary xl">ENTER NIGHTMARE</button>
-        <button id="tiltBtn" class="btn">Enable Tilt</button>
-        <button id="pauseBtn" class="btn" disabled>Pause</button>
-        <button id="fxBtn" class="btn">FX: HIGH</button>
+        <a class="btn primary xl menu-link" href="game.html">ENTER NIGHTMARE</a>
       </div>
       <p class="hint">
         Desktop: ←/→ lane, ↑/Space jump, ↓ slide, P pause.<br>
@@ -26,31 +23,5 @@
       </p>
     </div>
   </section>
-
-  <main id="gameShell" class="game-shell hidden">
-    <canvas id="game" aria-label="Temple Sprint game canvas"></canvas>
-
-    <section class="hud">
-      <div class="pill">Score <span id="score">0</span></div>
-      <div class="pill">Coins <span id="coins">0</span></div>
-      <div class="pill">Best <span id="best">0</span></div>
-      <div class="pill">Speed <span id="speed">1.0x</span></div>
-      <div class="pill">Combo <span id="combo">0</span></div>
-      <div class="pill">Streak <span id="streak">0</span></div>
-    </section>
-
-    <section id="gameOver" class="game-over hidden" aria-live="polite">
-      <h2>YOU WERE CONSUMED</h2>
-      <p>Score: <strong id="finalScore">0</strong></p>
-      <p>Coins: <strong id="finalCoins">0</strong></p>
-      <p>Best Combo: <strong id="finalCombo">0</strong></p>
-      <div class="menu-grid">
-        <button id="restartBtn" class="btn primary">RUN AGAIN</button>
-        <button id="menuBtn" class="btn">Back to Menu</button>
-      </div>
-    </section>
-  </main>
-
-  <script src="game.js"></script>
 </body>
 </html>
