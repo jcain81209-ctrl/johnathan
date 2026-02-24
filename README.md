@@ -1,10 +1,3 @@
- (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
-diff --git a/README.md b/README.md
-new file mode 100644
-index 0000000000000000000000000000000000000000..0c2171f1017247017a10b8835732338945dd6c79
---- /dev/null
-+++ b/README.md
-@@ -0,0 +1,92 @@
 +# Temple Run Clone Framework Base
 +
 +This project is a runnable Temple Run-style foundation intended for expansion into a full game.
@@ -97,6 +90,31 @@ index 0000000000000000000000000000000000000000..0c2171f1017247017a10b88357323389
 +```
 +
 +Then visit `http://localhost:4173`.
++
++
++## Troubleshooting: page shows raw diff text and buttons do nothing
++
++If the browser shows content like `diff --git ...`, `@@`, `+`, or `-` at the top of the page, your `index.html` was accidentally overwritten with patch text (usually from a bad copy/paste around `git apply`).
++
++### Fix quickly
++
++```bash
++git restore index.html game3d.js
++```
++
++If needed, restore everything to the latest commit:
++
++```bash
++git reset --hard HEAD
++```
++
++Then run again with a local server:
++
++```bash
++python3 -m http.server 4173
++```
++
++Open `http://localhost:4173`.
  
 EOF
 )
