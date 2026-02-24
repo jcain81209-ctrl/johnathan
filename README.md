@@ -1,22 +1,17 @@
 # Temple Sprint (Browser Runner)
 
-A Temple Run-inspired endless runner built with HTML5 Canvas and vanilla JavaScript, designed to work on:
+A Temple Run-inspired endless runner built with HTML5 Canvas and vanilla JavaScript.
 
-- **GitHub Pages**
-- **iPhone Safari** (swipe gestures + optional accelerometer tilt)
-- **Desktop browsers** (keyboard controls)
+## Highlights
 
-## Features
-
-- Endless 3-lane runner gameplay
-- Increasing speed and score over time
-- Coins and obstacle collisions
-- Jump + slide mechanics
-- Mobile swipe controls (left/right/up/down)
-- iOS tilt steering using `DeviceOrientationEvent` permission flow
-- Pause/resume
-- Local best-score persistence via `localStorage`
-- Responsive full-screen layout
+- Stylized pseudo-3D jungle scene with a dark sky and layered trees
+- Brick temple road with dynamic gaps (jump timing challenge)
+- Detailed runner sprite with jump + slide states
+- Coin collection + escalating speed and score
+- Desktop keyboard controls
+- Mobile swipe controls and iOS tilt support
+- Fullscreen responsive layout for GitHub Pages
+- Best-score persistence with `localStorage`
 
 ## Controls
 
@@ -33,22 +28,19 @@ A Temple Run-inspired endless runner built with HTML5 Canvas and vanilla JavaScr
 - Swipe left/right: change lane
 - Swipe up: jump
 - Swipe down: slide
-- Tap **Enable Tilt** to turn on accelerometer lane steering (when supported)
+- Tap **Enable Tilt** to allow accelerometer lane steering (supported devices)
 
 ## Run locally
-
-Because this is static HTML/CSS/JS, you can run with any local web server:
 
 ```bash
 python3 -m http.server 8000
 ```
 
-Then open: `http://localhost:8000`
+Open <http://localhost:8000>
 
 ## Deploy to GitHub Pages
 
-1. Push these files to a GitHub repository.
-2. In GitHub repo settings, enable **Pages**.
-3. Set source to your default branch root.
-4. Visit your provided Pages URL.
-
+1. Push these files to your GitHub repository root.
+2. In **Settings → Pages**, choose **Deploy from a branch**.
+3. Select `main` and `/ (root)`.
+4. Save and use the generated Pages URL.
