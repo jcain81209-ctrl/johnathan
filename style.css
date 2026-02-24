@@ -101,7 +101,6 @@ body {
 }
 
 .hud {
-  pointer-events: none;
   position: absolute;
   top: max(10px, env(safe-area-inset-top));
   left: 50%;
@@ -182,4 +181,11 @@ body {
   }
   .pill { font-size: 0.78rem; }
   .hint { font-size: 0.72rem; }
+}
+
+
+.menu-link {
+  display: inline-block;
+  text-decoration: none;
+  text-align: center;
 }
