@@ -1,9 +1,3 @@
- (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
-diff --git a/game3d.js b/game3d.js
-index f0b7aa6fb9ed63cc53f190764f9d7dabe65c3bf3..5357d5761891ecd5e7a3dab3cc7cd409b9c60809 100644
---- a/game3d.js
-+++ b/game3d.js
-@@ -1,287 +1,669 @@
 -// Set up global variables
 -let scene, camera, renderer;
 -let player, ground;
@@ -131,6 +125,39 @@ index f0b7aa6fb9ed63cc53f190764f9d7dabe65c3bf3..5357d5761891ecd5e7a3dab3cc7cd409
 +    status: document.getElementById('hudStatus')
 +  };
 +
++  const requiredUiKeys = [
++    'startScreen',
++    'gameOverScreen',
++    'startBtn',
++    'restartBtn',
++    'menuBtn',
++    'runSummary',
++    'hud',
++    'powerList',
++    'score',
++    'coins',
++    'multiplier',
++    'distance',
++    'highScore',
++    'status'
++  ];
++
++  function assertDomIsHealthy() {
++    const missing = requiredUiKeys.filter((key) => !ui[key]);
++    if (missing.length > 0 || !canvas || !ctx) {
++      document.body.style.background = '#111';
++      document.body.style.color = '#fff';
++      document.body.style.fontFamily = 'Arial, sans-serif';
++      document.body.innerHTML =
++        '<div style="padding:16px;line-height:1.5">' +
++        '<h2>Game boot failed</h2>' +
++        '<p>The HTML appears corrupted or out of sync with <code>game3d.js</code>.</p>' +
++        '<p>Restore files with <code>git restore index.html game3d.js</code> and reload.</p>' +
++        '</div>';
++      throw new Error(`Missing required DOM nodes: ${missing.join(', ')}`);
++    }
++  }
++
 +  const input = {
 +    left: false,
 +    right: false,
@@ -210,6 +237,17 @@ index f0b7aa6fb9ed63cc53f190764f9d7dabe65c3bf3..5357d5761891ecd5e7a3dab3cc7cd409
 +      jumpLocked: false,
 +      slideTimer: 0,
 +      crashedFlash: 0
++    };
++  }
++
++  function spawnSegment() {
++    const z = state.nextSegmentZ;
++    const difficulty = Math.min(1, state.distance / 2000);
++    const turnChance = 0.08 + difficulty * 0.18;
++    const segment = {
++      zStart: z,
++      zEnd: z + CONFIG.segmentLength,
++      turn: Math.random() < turnChance ? CONTENT.turns[(Math.random() * CONTENT.turns.length) | 0] : null
      };
 -    document.getElementById("pauseBtn").onclick = togglePause;
 -    document.addEventListener("keydown", handleKey);
@@ -252,244 +290,6 @@ index f0b7aa6fb9ed63cc53f190764f9d7dabe65c3bf3..5357d5761891ecd5e7a3dab3cc7cd409
 -// Handle touch controls for mobile
 -function handleTouch(e) {
 -    if (!gameRunning) return;
-+  }
-+
-+  function spawnSegment() {
-+    const z = state.nextSegmentZ;
-+    const difficulty = Math.min(1, state.distance / 2000);
-+    const turnChance = 0.08 + difficulty * 0.18;
-+    const segment = {
-+      zStart: z,
-+      zEnd: z + CONFIG.segmentLength,
-+      turn: Math.random() < turnChance ? CONTENT.turns[(Math.random() * CONTENT.turns.length) | 0] : null
-+    };
-+
-+    for (let zPos = segment.zStart + CONFIG.spawnStep; zPos < segment.zEnd; zPos += CONFIG.spawnStep) {
-+      const roll = Math.random();
-+      if (roll < 0.26) {
-+        const obstacle = CONTENT.obstacles[(Math.random() * CONTENT.obstacles.length) | 0];
-+        const lane = (Math.random() * 3) | 0;
-+        state.entities.push({ type: 'obstacle', lane, z: zPos, ...obstacle });
-+      } else if (roll < 0.58) {
-+        const lane = (Math.random() * 3) | 0;
-+        state.entities.push({ type: 'coin', lane, z: zPos, collected: false });
-+      } else if (roll < 0.63) {
-+        const lane = (Math.random() * 3) | 0;
-+        const power = CONTENT.powerups[(Math.random() * CONTENT.powerups.length) | 0];
-+        state.entities.push({ type: 'powerup', lane, z: zPos, id: power.id, color: power.color });
-+      }
-+    }
-+
-+    if (segment.turn) {
-+      state.entities.push({ type: 'turnGate', z: segment.zEnd - CONFIG.spawnStep, direction: segment.turn });
-+    }
-+
-+    state.segments.push(segment);
-+    state.nextSegmentZ += CONFIG.segmentLength;
-+  }
-+
-+  function ensureWorld() {
-+    while (state.nextSegmentZ < state.distance + CONFIG.visibleDepth + CONFIG.segmentLength) {
-+      spawnSegment();
-+    }
-+
-+    state.segments = state.segments.filter((seg) => seg.zEnd >= state.distance - CONFIG.segmentLength);
-+    state.entities = state.entities.filter((entity) => entity.z >= state.distance - 120);
-+  }
-+
-+  function activatePower(id, bonusSeconds = 0) {
-+    const duration = (CONFIG.powerDurations[id] || 6) + bonusSeconds;
-+    state.activePowers.set(id, duration);
-+    if (id === 'boost') {
-+      state.speed = Math.min(CONFIG.maxSpeed + 140, state.speed + 120);
-+    }
-+  }
-+
-+  function hasPower(id) {
-+    return state.activePowers.has(id);
-+  }
-+
-+  function applyInput() {
-+    const p = state.player;
-+    if (input.left && p.lane > 0) p.lane -= 1;
-+    if (input.right && p.lane < 2) p.lane += 1;
-+
-+    if (input.jump && p.y <= 0.01) {
-+      p.vy = CONFIG.jumpVelocity;
-+      p.jumpLocked = true;
-+    }
-+
-+    if (input.slide && p.y <= 0.01 && p.slideTimer <= 0) {
-+      p.slideTimer = CONFIG.slideDuration;
-+    }
-+
-+    if (input.pause && state.mode === 'running') {
-+      state.mode = 'paused';
-+      ui.status.textContent = 'Status: Paused';
-+    } else if (input.pause && state.mode === 'paused') {
-+      state.mode = 'running';
-+      ui.status.textContent = 'Status: Running';
-+    }
-+  }
-+
-+  function updatePlayer(dt) {
-+    const p = state.player;
-+    p.vy -= CONFIG.gravity * dt;
-+    p.y += p.vy * dt;
-+
-+    if (p.y <= 0) {
-+      p.y = 0;
-+      p.vy = 0;
-+      p.jumpLocked = false;
-+    }
-+
-+    p.slideTimer = Math.max(0, p.slideTimer - dt);
-+    p.laneVisualX += (laneToX(p.lane) - p.laneVisualX) * Math.min(1, dt * 16);
-+    p.crashedFlash = Math.max(0, p.crashedFlash - dt * 2);
-+  }
-+
-+  function pickupCoin() {
-+    state.coins += 1;
-+    state.combo = Math.min(state.combo + 1, 50);
-+  }
-+
-+  function doCrash() {
-+    const p = state.player;
-+    if (hasPower('shield')) {
-+      state.activePowers.delete('shield');
-+      p.crashedFlash = 1;
-+      state.chasePressure = Math.max(0, state.chasePressure - 0.35);
-+      return;
-+    }
-+
-+    if (state.reviveTokens > 0 && state.pendingReviveUntil <= 0) {
-+      state.pendingReviveUntil = CONFIG.reviveGraceSeconds;
-+      state.mode = 'revivePrompt';
-+      ui.status.textContent = 'Status: Revive Available';
-+      return;
-+    }
-+
-+    endRun();
-+  }
-+
-+  function evaluateEntityCollision(entity) {
-+    const p = state.player;
-+    const laneHit = entity.lane == null || entity.lane === p.lane;
-+    const close = Math.abs(entity.z - state.distance) < 20;
-+    if (!laneHit || !close) return;
-+
-+    if (entity.type === 'coin' && !entity.collected) {
-+      entity.collected = true;
-+      pickupCoin();
-+    }
-+
-+    if (entity.type === 'powerup') {
-+      entity.collected = true;
-+      activatePower(entity.id);
-+    }
-+
-+    if (entity.type === 'obstacle') {
-+      if (entity.requires === 'jump' && p.y > 35) return;
-+      if (entity.requires === 'slide' && p.slideTimer > 0) return;
-+      doCrash();
-+    }
-+
-+    if (entity.type === 'turnGate') {
-+      const insideWindow = entity.z - state.distance < 15 && entity.z - state.distance > -15;
-+      if (!insideWindow) return;
-+      const valid =
-+        (entity.direction === 'left' && input.turnLeft) ||
-+        (entity.direction === 'right' && input.turnRight);
-+      if (valid) {
-+        state.worldTurnPreview = entity.direction;
-+      } else {
-+        doCrash();
-+      }
-+    }
-+  }
-+
-+  function updatePowers(dt) {
-+    for (const [id, remaining] of state.activePowers.entries()) {
-+      const next = remaining - dt;
-+      if (next <= 0) {
-+        state.activePowers.delete(id);
-+      } else {
-+        state.activePowers.set(id, next);
-+      }
-+    }
-+
-+    if (hasPower('doubleScore')) {
-+      state.multiplier = 2 + state.combo * 0.02;
-+    } else {
-+      state.multiplier = 1 + state.combo * 0.015;
-+    }
-+  }
-+
-+  function updateChase(dt) {
-+    if (state.chaseCooldown > 0) {
-+      state.chaseCooldown -= dt;
-+      return;
-+    }
-+
-+    state.chasePressure = Math.min(1, state.chasePressure + dt * 0.018);
-+    if (state.chasePressure > 0.87) {
-+      doCrash();
-+      state.chaseCooldown = CONFIG.chaseDamageCooldown;
-+    }
-+  }
-+
-+  function updateDifficulty() {
-+    if (state.distance >= state.nextDifficultyGate) {
-+      state.nextDifficultyGate += CONFIG.difficultyPaceMeters;
-+      state.speed = Math.min(CONFIG.maxSpeed, state.speed + 14);
-+    }
-+  }
-+
-+  function update(dt) {
-+    if (state.mode === 'intro' || state.mode === 'gameover') return;
-+
-+    applyInput();
-+
-+    if (state.mode === 'paused') return;
-+
-+    if (state.mode === 'revivePrompt') {
-+      state.pendingReviveUntil -= dt;
-+      if (state.pendingReviveUntil <= 0) {
-+        state.reviveTokens -= 1;
-+        state.pendingReviveUntil = 0;
-+        state.mode = 'running';
-+        state.chasePressure = Math.max(0.22, state.chasePressure - 0.24);
-+        ui.status.textContent = 'Status: Revived';
-+      }
-+      return;
-+    }
-+
-+    state.mode = 'running';
-+
-+    updatePowers(dt);
-+
-+    const speedBonus = hasPower('boost') ? 200 : 0;
-+    state.speed = Math.min(CONFIG.maxSpeed + 100, state.speed + CONFIG.speedRampPerSecond * dt);
-+    const effectiveSpeed = state.speed + speedBonus;
-+
-+    state.elapsed += dt;
-+    state.distance += effectiveSpeed * dt;
-+
-+    if (hasPower('coinRush')) {
-+      state.coins += Math.floor(25 * dt);
-+    }
-+
-+    updatePlayer(dt);
-+    ensureWorld();
-+
-+    for (const entity of state.entities) {
-+      if (entity.collected) continue;
-+      if (hasPower('magnet') && entity.type === 'coin' && Math.abs(entity.z - state.distance) < 130 && Math.abs(entity.lane - state.player.lane) <= 1) {
-+        entity.collected = true;
-+        pickupCoin();
-+      }
-+      evaluateEntityCollision(entity);
-+    }
  
 -    const x = e.touches[0].clientX;
 -    if (x < window.innerWidth / 3) lane = Math.max(-1, lane - 1);
@@ -620,7 +420,103 @@ index f0b7aa6fb9ed63cc53f190764f9d7dabe65c3bf3..5357d5761891ecd5e7a3dab3cc7cd409
 -                obstacles.splice(i, 1);
 -            }
 -        });
-+    state.entities = state.entities.filter((entity) => !entity.collected);
++    for (let zPos = segment.zStart + CONFIG.spawnStep; zPos < segment.zEnd; zPos += CONFIG.spawnStep) {
++      const roll = Math.random();
++      if (roll < 0.26) {
++        const obstacle = CONTENT.obstacles[(Math.random() * CONTENT.obstacles.length) | 0];
++        const lane = (Math.random() * 3) | 0;
++        state.entities.push({ type: 'obstacle', lane, z: zPos, ...obstacle });
++      } else if (roll < 0.58) {
++        const lane = (Math.random() * 3) | 0;
++        state.entities.push({ type: 'coin', lane, z: zPos, collected: false });
++      } else if (roll < 0.63) {
++        const lane = (Math.random() * 3) | 0;
++        const power = CONTENT.powerups[(Math.random() * CONTENT.powerups.length) | 0];
++        state.entities.push({ type: 'powerup', lane, z: zPos, id: power.id, color: power.color });
++      }
++    }
++
++    if (segment.turn) {
++      state.entities.push({ type: 'turnGate', z: segment.zEnd - CONFIG.spawnStep, direction: segment.turn });
++    }
++
++    state.segments.push(segment);
++    state.nextSegmentZ += CONFIG.segmentLength;
++  }
++
++  function ensureWorld() {
++    while (state.nextSegmentZ < state.distance + CONFIG.visibleDepth + CONFIG.segmentLength) {
++      spawnSegment();
++    }
++
++    state.segments = state.segments.filter((seg) => seg.zEnd >= state.distance - CONFIG.segmentLength);
++    state.entities = state.entities.filter((entity) => entity.z >= state.distance - 120);
++  }
++
++  function activatePower(id, bonusSeconds = 0) {
++    const duration = (CONFIG.powerDurations[id] || 6) + bonusSeconds;
++    state.activePowers.set(id, duration);
++    if (id === 'boost') {
++      state.speed = Math.min(CONFIG.maxSpeed + 140, state.speed + 120);
++    }
++  }
++
++  function hasPower(id) {
++    return state.activePowers.has(id);
++  }
++
++  function applyInput() {
++    const p = state.player;
++    if (input.left && p.lane > 0) p.lane -= 1;
++    if (input.right && p.lane < 2) p.lane += 1;
++
++    if (input.jump && p.y <= 0.01) {
++      p.vy = CONFIG.jumpVelocity;
++      p.jumpLocked = true;
++    }
++
++    if (input.slide && p.y <= 0.01 && p.slideTimer <= 0) {
++      p.slideTimer = CONFIG.slideDuration;
++    }
++
++    if (input.pause && state.mode === 'running') {
++      state.mode = 'paused';
++      ui.status.textContent = 'Status: Paused';
++    } else if (input.pause && state.mode === 'paused') {
++      state.mode = 'running';
++      ui.status.textContent = 'Status: Running';
++    }
++  }
++
++  function updatePlayer(dt) {
++    const p = state.player;
++    p.vy -= CONFIG.gravity * dt;
++    p.y += p.vy * dt;
++
++    if (p.y <= 0) {
++      p.y = 0;
++      p.vy = 0;
++      p.jumpLocked = false;
++    }
++
++    p.slideTimer = Math.max(0, p.slideTimer - dt);
++    p.laneVisualX += (laneToX(p.lane) - p.laneVisualX) * Math.min(1, dt * 16);
++    p.crashedFlash = Math.max(0, p.crashedFlash - dt * 2);
++  }
++
++  function pickupCoin() {
++    state.coins += 1;
++    state.combo = Math.min(state.combo + 1, 50);
++  }
++
++  function doCrash() {
++    const p = state.player;
++    if (hasPower('shield')) {
++      state.activePowers.delete('shield');
++      p.crashedFlash = 1;
++      state.chasePressure = Math.max(0, state.chasePressure - 0.35);
++      return;
++    }
  
 -        coins.forEach((c, i) => {
 -            c.rotation.y += 0.1;
@@ -641,8 +537,26 @@ index f0b7aa6fb9ed63cc53f190764f9d7dabe65c3bf3..5357d5761891ecd5e7a3dab3cc7cd409
 -
 -        powerUps.forEach((p, i) => {
 -            p.position.z += speed;
-+    updateDifficulty();
-+    updateChase(dt);
++    if (state.reviveTokens > 0 && state.pendingReviveUntil <= 0) {
++      state.pendingReviveUntil = CONFIG.reviveGraceSeconds;
++      state.mode = 'revivePrompt';
++      ui.status.textContent = 'Status: Revive Available';
++      return;
++    }
++
++    endRun();
++  }
++
++  function evaluateEntityCollision(entity) {
++    const p = state.player;
++    const laneHit = entity.lane == null || entity.lane === p.lane;
++    const close = Math.abs(entity.z - state.distance) < 20;
++    if (!laneHit || !close) return;
++
++    if (entity.type === 'coin' && !entity.collected) {
++      entity.collected = true;
++      pickupCoin();
++    }
  
 -            if (Math.abs(p.position.z) < 1 &&
 -                Math.abs(p.position.x - player.position.x) < 1) {
@@ -674,6 +588,119 @@ index f0b7aa6fb9ed63cc53f190764f9d7dabe65c3bf3..5357d5761891ecd5e7a3dab3cc7cd409
 -    document.getElementById("startScreen").style.display = "flex";  // Restart the game
 -    document.getElementById("pauseBtn").style.display = "none";
 -}
++    if (entity.type === 'powerup') {
++      entity.collected = true;
++      activatePower(entity.id);
++    }
++
++    if (entity.type === 'obstacle') {
++      if (entity.requires === 'jump' && p.y > 35) return;
++      if (entity.requires === 'slide' && p.slideTimer > 0) return;
++      doCrash();
++    }
++
++    if (entity.type === 'turnGate') {
++      const insideWindow = entity.z - state.distance < 15 && entity.z - state.distance > -15;
++      if (!insideWindow) return;
++      const valid =
++        (entity.direction === 'left' && input.turnLeft) ||
++        (entity.direction === 'right' && input.turnRight);
++      if (valid) {
++        state.worldTurnPreview = entity.direction;
++      } else {
++        doCrash();
++      }
++    }
++  }
++
++  function updatePowers(dt) {
++    for (const [id, remaining] of state.activePowers.entries()) {
++      const next = remaining - dt;
++      if (next <= 0) {
++        state.activePowers.delete(id);
++      } else {
++        state.activePowers.set(id, next);
++      }
++    }
++
++    if (hasPower('doubleScore')) {
++      state.multiplier = 2 + state.combo * 0.02;
++    } else {
++      state.multiplier = 1 + state.combo * 0.015;
++    }
++  }
++
++  function updateChase(dt) {
++    if (state.chaseCooldown > 0) {
++      state.chaseCooldown -= dt;
++      return;
++    }
++
++    state.chasePressure = Math.min(1, state.chasePressure + dt * 0.018);
++    if (state.chasePressure > 0.87) {
++      doCrash();
++      state.chaseCooldown = CONFIG.chaseDamageCooldown;
++    }
++  }
++
++  function updateDifficulty() {
++    if (state.distance >= state.nextDifficultyGate) {
++      state.nextDifficultyGate += CONFIG.difficultyPaceMeters;
++      state.speed = Math.min(CONFIG.maxSpeed, state.speed + 14);
++    }
++  }
++
++  function update(dt) {
++    if (state.mode === 'intro' || state.mode === 'gameover') return;
++
++    applyInput();
++
++    if (state.mode === 'paused') return;
++
++    if (state.mode === 'revivePrompt') {
++      state.pendingReviveUntil -= dt;
++      if (state.pendingReviveUntil <= 0) {
++        state.reviveTokens -= 1;
++        state.pendingReviveUntil = 0;
++        state.mode = 'running';
++        state.chasePressure = Math.max(0.22, state.chasePressure - 0.24);
++        ui.status.textContent = 'Status: Revived';
++      }
++      return;
++    }
++
++    state.mode = 'running';
++
++    updatePowers(dt);
++
++    const speedBonus = hasPower('boost') ? 200 : 0;
++    state.speed = Math.min(CONFIG.maxSpeed + 100, state.speed + CONFIG.speedRampPerSecond * dt);
++    const effectiveSpeed = state.speed + speedBonus;
++
++    state.elapsed += dt;
++    state.distance += effectiveSpeed * dt;
++
++    if (hasPower('coinRush')) {
++      state.coins += Math.floor(25 * dt);
++    }
++
++    updatePlayer(dt);
++    ensureWorld();
++
++    for (const entity of state.entities) {
++      if (entity.collected) continue;
++      if (hasPower('magnet') && entity.type === 'coin' && Math.abs(entity.z - state.distance) < 130 && Math.abs(entity.lane - state.player.lane) <= 1) {
++        entity.collected = true;
++        pickupCoin();
++      }
++      evaluateEntityCollision(entity);
++    }
++
++    state.entities = state.entities.filter((entity) => !entity.collected);
++
++    updateDifficulty();
++    updateChase(dt);
++
 +    state.score += dt * (effectiveSpeed * 0.5) * state.multiplier;
 +
 +    if (Math.floor(state.score) > state.highScore) {
@@ -945,6 +972,7 @@ index f0b7aa6fb9ed63cc53f190764f9d7dabe65c3bf3..5357d5761891ecd5e7a3dab3cc7cd409
 +  }
 +
 +  function init() {
++    assertDomIsHealthy();
 +    loadSave();
 +    resize();
 +    state.player = createPlayer();
