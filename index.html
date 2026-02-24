@@ -1,9 +1,9 @@
  (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
 diff --git a/index.html b/index.html
-index 99f851c53fb9e34e15864e14b9ddbdbd6b3d8405..32d07f80defd140d7cf88a9014c34332e5ec2879 100644
+index 99f851c53fb9e34e15864e14b9ddbdbd6b3d8405..afca7014af7450c846d339cc864e29e81e2168a3 100644
 --- a/index.html
 +++ b/index.html
-@@ -1,92 +1,168 @@
+@@ -1,92 +1,172 @@
  <!DOCTYPE html>
  <html lang="en">
  <head>
@@ -102,10 +102,13 @@ index 99f851c53fb9e34e15864e14b9ddbdbd6b3d8405..32d07f80defd140d7cf88a9014c34332
 +    }
 +
 +    #gameCanvas {
++      position: fixed;
++      inset: 0;
 +      display: block;
 +      width: 100vw;
 +      height: 100vh;
 +      touch-action: none;
++      z-index: 1;
 +    }
 +
 +    .screen {
@@ -115,7 +118,7 @@ index 99f851c53fb9e34e15864e14b9ddbdbd6b3d8405..32d07f80defd140d7cf88a9014c34332
 +      place-items: center;
 +      background: rgba(3, 7, 13, 0.62);
 +      backdrop-filter: blur(4px);
-+      z-index: 20;
++      z-index: 30;
 +    }
 +
 +    .panel {
@@ -125,6 +128,7 @@ index 99f851c53fb9e34e15864e14b9ddbdbd6b3d8405..32d07f80defd140d7cf88a9014c34332
 +      border-radius: 16px;
 +      padding: 1.25rem;
 +      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
++      pointer-events: auto;
 +    }
 +
 +    .panel h1,
@@ -169,7 +173,7 @@ index 99f851c53fb9e34e15864e14b9ddbdbd6b3d8405..32d07f80defd140d7cf88a9014c34332
 +      display: flex;
 +      gap: 8px;
 +      flex-wrap: wrap;
-+      z-index: 15;
++      z-index: 40;
 +      pointer-events: none;
 +    }
 +
@@ -187,7 +191,7 @@ index 99f851c53fb9e34e15864e14b9ddbdbd6b3d8405..32d07f80defd140d7cf88a9014c34332
 +      bottom: 10px;
 +      display: grid;
 +      gap: 6px;
-+      z-index: 16;
++      z-index: 41;
 +      pointer-events: none;
 +    }
 +
