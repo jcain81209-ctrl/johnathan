@@ -7,28 +7,28 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <main class="game-shell">
-    <canvas id="game" aria-label="Temple Sprint game canvas"></canvas>
-
-    <section id="startMenu" class="start-menu">
-      <div class="menu-card">
-        <p class="menu-kicker">SKILL MODE · INFERNAL NIGHTMARE</p>
-        <h1>TEMPLE SPRINT</h1>
-        <p class="menu-sub">
-          Run the cursed causeway. Leap abyss fissures, dodge shattered stone, outrun the beast in the fog.
-        </p>
-        <div class="menu-grid">
-          <button id="startBtn" class="btn primary xl">ENTER NIGHTMARE</button>
-          <button id="tiltBtn" class="btn">Enable Tilt</button>
-          <button id="pauseBtn" class="btn" disabled>Pause</button>
-          <button id="fxBtn" class="btn">FX: HIGH</button>
-        </div>
-        <p class="hint">
-          Desktop: ←/→ lane, ↑/Space jump, ↓ slide, P pause.<br>
-          Mobile: Swipe + optional tilt (scroll blocked while touching game canvas).
-        </p>
+  <section id="startMenu" class="start-menu standalone-menu">
+    <div class="menu-card">
+      <p class="menu-kicker">SKILL MODE · INFERNAL NIGHTMARE</p>
+      <h1>TEMPLE SPRINT</h1>
+      <p class="menu-sub">
+        Run the cursed causeway. Leap abyss fissures, dodge shattered stone, outrun the beast in the fog.
+      </p>
+      <div class="menu-grid">
+        <button id="startBtn" class="btn primary xl">ENTER NIGHTMARE</button>
+        <button id="tiltBtn" class="btn">Enable Tilt</button>
+        <button id="pauseBtn" class="btn" disabled>Pause</button>
+        <button id="fxBtn" class="btn">FX: HIGH</button>
       </div>
-    </section>
+      <p class="hint">
+        Desktop: ←/→ lane, ↑/Space jump, ↓ slide, P pause.<br>
+        Mobile: Swipe anywhere in the play screen + optional tilt.
+      </p>
+    </div>
+  </section>
+
+  <main id="gameShell" class="game-shell hidden">
+    <canvas id="game" aria-label="Temple Sprint game canvas"></canvas>
 
     <section class="hud">
       <div class="pill">Score <span id="score">0</span></div>
