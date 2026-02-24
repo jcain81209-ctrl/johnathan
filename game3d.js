@@ -1,10 +1,9 @@
-// Set up variables
+// Set up global variables
 let scene, camera, renderer;
 let player, ground;
 let obstacles = [];
 let coins = [];
 let powerUps = [];
-let path = [];
 
 let lane = 0;
 let targetX = 0;
@@ -28,6 +27,8 @@ let maxCombo = 1;
 
 let isShaking = false;
 let shakeAmount = 0;
+
+let jumpAnimation = 0;
 
 // Initialize the scene
 function init() {
@@ -58,8 +59,10 @@ function init() {
     spawnCoins();
     spawnPowerUps();
 
-    // Add event listeners
-    document.getElementById("startBtn").onclick = startGame;
+    // Event listeners
+    document.getElementById("startBtn").onclick = function() {
+        startGame();
+    };
     document.getElementById("pauseBtn").onclick = togglePause;
     document.addEventListener("keydown", handleKey);
     document.addEventListener("touchstart", handleTouch);
@@ -69,32 +72,12 @@ function init() {
     document.getElementById("combo").innerText = `Combo: x${combo}`;
 }
 
-function createGround() {
-    const geo = new THREE.PlaneGeometry(20, 2000);
-    const mat = new THREE.MeshStandardMaterial({ color: 0x8b4513 });  // Stone-like texture
-    const ground = new THREE.Mesh(geo, mat);
-    ground.rotation.x = -Math.PI / 2;
-    ground.position.z = -1000;
-    scene.add(ground);
-}
-
-function createPlayer() {
-    const texture = new THREE.TextureLoader().load('player_sprite.png');  // Replace with your sprite
-    const geo = new THREE.PlaneGeometry(1.5, 2);  // Plane for sprite
-    const mat = new THREE.SpriteMaterial({ map: texture });
-    player = new THREE.Sprite(mat);
-    player.position.y = 1;
-    scene.add(player);
-}
-
 // Start the game
 function startGame() {
     gameRunning = true;
     document.getElementById("startScreen").style.display = "none";
     document.getElementById("pauseBtn").style.display = "block";
-    spawnObstacle();
-    spawnCoin();
-    spawnPowerUp();
+    animate();
 }
 
 // Pause functionality
