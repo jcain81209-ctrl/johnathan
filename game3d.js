@@ -1,23 +1,26 @@
 // =====================================
-// JUNGLE RUNNER MODE
+// JUNGLE RUNNER - FULL VERSION
 // =====================================
 
 let scene, camera, renderer;
 let player, ground;
 let obstacles = [];
 let coins = [];
+let powerUps = [];
 
 let lane = 0;
 let targetX = 0;
 let speed = 0.8;
 let score = 0;
 let highScore = localStorage.getItem("highScore") || 0;
-
-let gameStarted = false;
+let combo = 1;
+let isPaused = false;
+let isJumping = false;
 let velocityY = 0;
 let gravity = -0.02;
-let isJumping = false;
-let isPaused = false;
+let isSliding = false;
+let currentPowerUp = null;
+let powerUpTimer = 0;
 
 document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("startBtn").addEventListener("click", startGame);
@@ -26,6 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function startGame() {
     document.getElementById("startScreen").style.display = "none";
+    document.getElementById("pauseBtn").style.display = "block";
     init();
     animate();
     gameStarted = true;
@@ -35,9 +39,11 @@ function togglePause() {
     if (isPaused) {
         gameStarted = true;
         isPaused = false;
+        document.getElementById("pauseBtn").style.display = "none";  // Hide pause button
     } else {
         gameStarted = false;
         isPaused = true;
+        document.getElementById("pauseBtn").style.display = "block";  // Show pause button
     }
 }
 
@@ -83,6 +89,7 @@ function init() {
 
     spawnObstacle();
     spawnCoin();
+    spawnPowerUp();
     spawnTrees();
 
     window.addEventListener("resize", onResize);
@@ -164,6 +171,27 @@ function spawnCoin() {
 }
 
 // ======================
+// POWER-UPS
+// ======================
+
+function spawnPowerUp() {
+
+    const geo = new THREE.CylinderGeometry(0.5, 0.5, 1, 8);
+    const mat = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
+    const powerUp = new THREE.Mesh(geo, mat);
+
+    const randomLane = Math.floor(Math.random() * 3) - 1;
+    powerUp.position.x = randomLane * 4;
+    powerUp.position.y = 2;
+    powerUp.position.z = -200;
+
+    scene.add(powerUp);
+    powerUps.push(powerUp);
+
+    setTimeout(spawnPowerUp, 5000);
+}
+
+// ======================
 // ANIMATION
 // ======================
 
@@ -220,12 +248,32 @@ function animate() {
             ) {
                 scene.remove(c);
                 coins.splice(index, 1);
-                score += 10;
+                score += 10 * combo;
+                updateScore();
             }
 
             if (c.position.z > 10) {
                 scene.remove(c);
                 coins.splice(index, 1);
+            }
+        });
+
+        // Move power-ups
+        powerUps.forEach((p, index) => {
+            p.position.z += speed;
+
+            if (
+                Math.abs(p.position.x - player.position.x) < 1.5 &&
+                Math.abs(p.position.z - player.position.z) < 1.5
+            ) {
+                scene.remove(p);
+                powerUps.splice(index, 1);
+                activatePowerUp();
+            }
+
+            if (p.position.z > 10) {
+                scene.remove(p);
+                powerUps.splice(index, 1);
             }
         });
     }
@@ -264,11 +312,20 @@ window.addEventListener("touchend", (e) => {
         isJumping = true;
         velocityY = 0.4;
     }
+
+    if (dy > 50 && !isSliding) {
+        isSliding = true;
+    }
 });
 
 // ======================
-// RESIZE
+// SCORE AND UI
 // ======================
+
+function updateScore() {
+    document.getElementById("scoreText").textContent = "Score: " + score;
+    document.getElementById("highScoreText").textContent = "High Score: " + highScore;
+}
 
 function onResize() {
     camera.aspect = window.innerWidth / window.innerHeight;
