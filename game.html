@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+  <title>Temple Sprint: Nightmare Skill Mode</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main id="gameShell" class="game-shell">
+    <canvas id="game" aria-label="Temple Sprint game canvas"></canvas>
+
+    <section class="hud">
+      <div class="pill">Score <span id="score">0</span></div>
+      <div class="pill">Coins <span id="coins">0</span></div>
+      <div class="pill">Best <span id="best">0</span></div>
+      <div class="pill">Speed <span id="speed">1.0x</span></div>
+      <div class="pill">Combo <span id="combo">0</span></div>
+      <div class="pill">Streak <span id="streak">0</span></div>
+      <button id="tiltBtn" class="btn">Enable Tilt</button>
+      <button id="pauseBtn" class="btn">Pause</button>
+      <button id="fxBtn" class="btn">FX: HIGH</button>
+      <a class="btn" href="index.html">Menu</a>
+    </section>
+
+    <section id="gameOver" class="game-over hidden" aria-live="polite">
+      <h2>YOU WERE CONSUMED</h2>
+      <p>Score: <strong id="finalScore">0</strong></p>
+      <p>Coins: <strong id="finalCoins">0</strong></p>
+      <p>Best Combo: <strong id="finalCombo">0</strong></p>
+      <div class="menu-grid">
+        <button id="restartBtn" class="btn primary">RUN AGAIN</button>
+        <a class="btn" href="index.html">Back to Menu</a>
+      </div>
+    </section>
+  </main>
+
+  <script src="game.js"></script>
+</body>
+</html>
