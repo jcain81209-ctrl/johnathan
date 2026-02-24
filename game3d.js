@@ -11,14 +11,17 @@ let lane = 0;
 let targetX = 0;
 let speed = 0.8;
 let score = 0;
+let highScore = localStorage.getItem("highScore") || 0;
 
 let gameStarted = false;
 let velocityY = 0;
 let gravity = -0.02;
 let isJumping = false;
+let isPaused = false;
 
 document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("startBtn").addEventListener("click", startGame);
+    document.getElementById("pauseBtn").addEventListener("click", togglePause);
 });
 
 function startGame() {
@@ -26,6 +29,16 @@ function startGame() {
     init();
     animate();
     gameStarted = true;
+}
+
+function togglePause() {
+    if (isPaused) {
+        gameStarted = true;
+        isPaused = false;
+    } else {
+        gameStarted = false;
+        isPaused = true;
+    }
 }
 
 function init() {
@@ -81,23 +94,23 @@ function init() {
 
 function spawnTrees() {
 
-    for (let i = 0; i < 40; i++) {
+    for (let i = 0; i < 10; i++) {
 
-        const trunkGeo = new THREE.CylinderGeometry(0.5, 0.5, 5);
+        const trunkGeo = new THREE.CylinderGeometry(0.5 + Math.random() * 0.5, 0.5 + Math.random() * 0.5, 8 + Math.random() * 5);
         const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5a3b1c });
         const trunk = new THREE.Mesh(trunkGeo, trunkMat);
 
         trunk.position.x = (Math.random() > 0.5 ? 10 : -10);
-        trunk.position.y = 2.5;
+        trunk.position.y = 4;
         trunk.position.z = -Math.random() * 400;
 
         scene.add(trunk);
 
-        const leavesGeo = new THREE.SphereGeometry(3);
-        const leavesMat = new THREE.MeshStandardMaterial({ color: 0x0f7a0f });
+        const leavesGeo = new THREE.SphereGeometry(5 + Math.random() * 4);
+        const leavesMat = new THREE.MeshStandardMaterial({ color: 0x1e7d30 });
         const leaves = new THREE.Mesh(leavesGeo, leavesMat);
 
-        leaves.position.set(trunk.position.x, 6, trunk.position.z);
+        leaves.position.set(trunk.position.x, trunk.position.y + 6, trunk.position.z);
 
         scene.add(leaves);
     }
@@ -117,6 +130,11 @@ function spawnObstacle() {
     obstacle.position.x = randomLane * 4;
     obstacle.position.y = 1;
     obstacle.position.z = -300;
+
+    // Add a random turn
+    if (Math.random() > 0.7) {
+        obstacle.rotation.y = Math.random() > 0.5 ? Math.PI / 4 : -Math.PI / 4;
+    }
 
     scene.add(obstacle);
     obstacles.push(obstacle);
@@ -152,7 +170,7 @@ function spawnCoin() {
 function animate() {
     requestAnimationFrame(animate);
 
-    if (gameStarted) {
+    if (gameStarted && !isPaused) {
 
         speed += 0.0002;
 
@@ -247,6 +265,10 @@ window.addEventListener("touchend", (e) => {
         velocityY = 0.4;
     }
 });
+
+// ======================
+// RESIZE
+// ======================
 
 function onResize() {
     camera.aspect = window.innerWidth / window.innerHeight;
