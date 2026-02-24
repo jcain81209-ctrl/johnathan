@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Johnathan Runner</title>
+    <title>Johnathan Runner - Jungle Adventure</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body {
@@ -41,8 +41,22 @@
             background: white;
             color: black;
             cursor: pointer;
-            margin-top: 20px;
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 20;
+            display: none;
         }
+
+        #scoreUI {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 20;
+            color: white;
+            font-size: 20px;
+        }
+
     </style>
 </head>
 <body>
@@ -50,7 +64,13 @@
 <div id="startScreen">
     <h1>JOHNATHAN</h1>
     <button id="startBtn">START</button>
-    <button id="pauseBtn">PAUSE</button>
+</div>
+
+<button id="pauseBtn">PAUSE</button>
+
+<div id="scoreUI">
+    <p id="scoreText">Score: 0</p>
+    <p id="highScoreText">High Score: 0</p>
 </div>
 
 <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
