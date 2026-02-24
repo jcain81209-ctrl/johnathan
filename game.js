@@ -18,7 +18,8 @@ const ui = {
   finalCombo: document.getElementById('finalCombo'),
   restartBtn: document.getElementById('restartBtn'),
   menuBtn: document.getElementById('menuBtn'),
-  startMenu: document.getElementById('startMenu')
+  startMenu: document.getElementById('startMenu'),
+  gameShell: document.getElementById('gameShell')
 };
 
 const LANE_X = [-1, 0, 1];
@@ -549,34 +550,59 @@ function drawRunnerShadow(p, s) {
 function drawRunnerBody(p, s) {
   if (state.slideT > 0) {
     ctx.fillStyle = '#d7d2c4';
-    ctx.fillRect(p.x - s * 0.72, p.y - s * 0.52, s * 1.44, s * 0.58);
+    ctx.beginPath();
+    ctx.ellipse(p.x, p.y - s * 0.32, s * 0.78, s * 0.35, 0, 0, Math.PI * 2);
+    ctx.fill();
     ctx.fillStyle = '#9d6140';
-    ctx.fillRect(p.x + s * 0.35, p.y - s * 0.42, s * 0.35, s * 0.32);
+    ctx.beginPath();
+    ctx.arc(p.x + s * 0.5, p.y - s * 0.42, s * 0.16, 0, Math.PI * 2);
+    ctx.fill();
     return;
   }
 
+  // torso
   ctx.fillStyle = '#dbd6c8';
-  ctx.fillRect(p.x - s * 0.34, p.y - s * 0.96, s * 0.68, s * 1.28);
+  ctx.beginPath();
+  ctx.moveTo(p.x - s * 0.28, p.y - s * 0.1);
+  ctx.quadraticCurveTo(p.x - s * 0.38, p.y - s * 0.72, p.x, p.y - s * 1.0);
+  ctx.quadraticCurveTo(p.x + s * 0.38, p.y - s * 0.72, p.x + s * 0.28, p.y - s * 0.1);
+  ctx.quadraticCurveTo(p.x, p.y + s * 0.18, p.x - s * 0.28, p.y - s * 0.1);
+  ctx.fill();
 
+  // head
   ctx.fillStyle = '#8f5a3a';
-  ctx.fillRect(p.x - s * 0.16, p.y - s * 1.29, s * 0.32, s * 0.34);
+  ctx.beginPath();
+  ctx.arc(p.x, p.y - s * 1.18, s * 0.19, 0, Math.PI * 2);
+  ctx.fill();
 
-  ctx.fillStyle = '#4f3026';
-  ctx.fillRect(p.x - s * 0.53, p.y - s * 0.79, s * 0.16, s * 0.76);
-  ctx.fillRect(p.x + s * 0.37, p.y - s * 0.79, s * 0.16, s * 0.76);
+  // arms
+  ctx.strokeStyle = '#4f3026';
+  ctx.lineWidth = Math.max(2, s * 0.12);
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(p.x - s * 0.18, p.y - s * 0.6);
+  ctx.lineTo(p.x - s * 0.46, p.y - s * 0.35);
+  ctx.moveTo(p.x + s * 0.18, p.y - s * 0.6);
+  ctx.lineTo(p.x + s * 0.46, p.y - s * 0.3);
+  ctx.stroke();
 
-  ctx.fillStyle = '#2b3038';
-  ctx.fillRect(p.x - s * 0.31, p.y + s * 0.25, s * 0.24, s * 0.8);
-  ctx.fillRect(p.x + s * 0.07, p.y + s * 0.25, s * 0.24, s * 0.8);
+  // legs
+  ctx.strokeStyle = '#2b3038';
+  ctx.lineWidth = Math.max(2, s * 0.14);
+  ctx.beginPath();
+  ctx.moveTo(p.x - s * 0.08, p.y + s * 0.1);
+  ctx.lineTo(p.x - s * 0.18, p.y + s * 0.95);
+  ctx.moveTo(p.x + s * 0.08, p.y + s * 0.1);
+  ctx.lineTo(p.x + s * 0.2, p.y + s * 0.95);
+  ctx.stroke();
 
-  ctx.fillStyle = '#b74130';
-  ctx.fillRect(p.x - s * 0.11, p.y - s * 0.58, s * 0.22, s * 0.2);
-
-  if (state.fx === FX_LEVEL.HIGH) {
-    ctx.strokeStyle = 'rgba(255, 148, 108, 0.28)';
-    ctx.lineWidth = Math.max(1, s * 0.04);
-    ctx.strokeRect(p.x - s * 0.34, p.y - s * 0.96, s * 0.68, s * 1.28);
-  }
+  // chest sash
+  ctx.strokeStyle = '#b74130';
+  ctx.lineWidth = Math.max(2, s * 0.08);
+  ctx.beginPath();
+  ctx.moveTo(p.x - s * 0.2, p.y - s * 0.76);
+  ctx.lineTo(p.x + s * 0.2, p.y - s * 0.24);
+  ctx.stroke();
 }
 
 function drawRunnerAura(p, s) {
@@ -894,6 +920,7 @@ function startRun() {
   state.gameOver = false;
   state.paused = false;
   ui.startMenu.classList.add('hidden');
+  ui.gameShell.classList.remove('hidden');
   ui.over.classList.add('hidden');
   ui.pauseBtn.disabled = false;
   ui.pauseBtn.textContent = 'Pause';
@@ -914,6 +941,7 @@ function backToMenu() {
   state.fx = fx;
   ui.fxBtn.textContent = `FX: ${state.fx}`;
   ui.over.classList.add('hidden');
+  ui.gameShell.classList.add('hidden');
   ui.startMenu.classList.remove('hidden');
   ui.pauseBtn.disabled = true;
   updateHud();
@@ -946,19 +974,26 @@ window.addEventListener('keydown', (e) => {
   if (e.key.toLowerCase() === 'p') togglePause();
 });
 
-canvas.addEventListener('touchstart', (e) => {
+window.addEventListener('touchstart', (e) => {
+  if (!state.running || state.gameOver) return;
+  const target = e.target;
+  if (target && target.closest && target.closest('button')) return;
   e.preventDefault();
   const t = e.changedTouches[0];
   touchStart = { x: t.clientX, y: t.clientY, time: performance.now() };
 }, { passive: false });
 
-canvas.addEventListener('touchmove', (e) => {
+window.addEventListener('touchmove', (e) => {
+  if (!state.running || state.gameOver) return;
   e.preventDefault();
 }, { passive: false });
 
-canvas.addEventListener('touchend', (e) => {
+window.addEventListener('touchend', (e) => {
+  if (!state.running || state.gameOver) return;
+  const target = e.target;
+  if (target && target.closest && target.closest('button')) return;
   e.preventDefault();
-  if (!touchStart || !state.running || state.gameOver) return;
+  if (!touchStart) return;
 
   const t = e.changedTouches[0];
   const dx = t.clientX - touchStart.x;
@@ -1023,4 +1058,5 @@ window.addEventListener('resize', resize);
 resetState();
 resize();
 updateHud();
+ui.gameShell.classList.add('hidden');
 requestAnimationFrame(loop);
