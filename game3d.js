@@ -1,9 +1,10 @@
-// Three.js setup
 let scene, camera, renderer;
 let player, ground;
 let obstacles = [];
 let coins = [];
 let powerUps = [];
+let particleSystem;
+
 let lane = 0;
 let targetX = 0;
 let speed = 0.8;
@@ -23,6 +24,9 @@ let currentPowerUp = null;
 
 let combo = 1;
 let maxCombo = 1;
+
+let isShaking = false;
+let shakeAmount = 0;
 
 init();
 animate();
@@ -56,6 +60,8 @@ function init() {
     document.addEventListener("touchstart", handleTouch);
 
     document.getElementById("highScore").innerText = highScore;
+    document.getElementById("score").innerText = score;
+    document.getElementById("combo").innerText = `Combo: x${combo}`;
 }
 
 function createGround() {
@@ -242,6 +248,7 @@ function animate() {
         });
 
         document.getElementById("score").innerText = score;
+        document.getElementById("combo").innerText = `Combo: x${combo}`;
     }
 
     renderer.render(scene, camera);
