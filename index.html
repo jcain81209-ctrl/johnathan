@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Temple Sprint</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="game-shell">
+    <canvas id="game" aria-label="Temple Sprint game canvas"></canvas>
+
+    <section class="hud">
+      <div class="pill">Score: <span id="score">0</span></div>
+      <div class="pill">Coins: <span id="coins">0</span></div>
+      <div class="pill">Best: <span id="best">0</span></div>
+      <div class="pill">Speed: <span id="speed">1.0x</span></div>
+    </section>
+
+    <section class="controls-overlay">
+      <button id="startBtn" class="btn primary">Start Run</button>
+      <button id="pauseBtn" class="btn" disabled>Pause</button>
+      <button id="tiltBtn" class="btn">Enable Tilt</button>
+      <p class="hint">
+        Desktop: ←/→ to switch lanes, ↑/Space to jump, ↓ to slide, P to pause.<br />
+        Mobile: Swipe for jump/slide/lane change. Optional tilt steering on supported devices.
+      </p>
+    </section>
+
+    <section id="gameOver" class="game-over hidden" aria-live="polite">
+      <h1>Run Over</h1>
+      <p>Your score: <strong id="finalScore">0</strong></p>
+      <p>Coins collected: <strong id="finalCoins">0</strong></p>
+      <button id="restartBtn" class="btn primary">Run Again</button>
+    </section>
+  </main>
+
+  <script src="game.js"></script>
+</body>
+</html>
