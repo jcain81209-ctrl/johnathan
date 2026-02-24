@@ -1,14 +1,16 @@
 // =====================================
-// JOHNATHAN 3D MOBILE RUNNER
+// JUNGLE RUNNER MODE
 // =====================================
 
 let scene, camera, renderer;
 let player, ground;
 let obstacles = [];
+let coins = [];
 
 let lane = 0;
 let targetX = 0;
-let speed = 0.9;
+let speed = 0.8;
+let score = 0;
 
 let gameStarted = false;
 let velocityY = 0;
@@ -29,7 +31,7 @@ function startGame() {
 function init() {
 
     scene = new THREE.Scene();
-    scene.fog = new THREE.Fog(0x000000, 15, 90);
+    scene.fog = new THREE.Fog(0x0b3d0b, 20, 120);
 
     camera = new THREE.PerspectiveCamera(
         75,
@@ -43,71 +45,117 @@ function init() {
 
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.shadowMap.enabled = true;
     document.body.appendChild(renderer.domElement);
 
     const light = new THREE.DirectionalLight(0xffffff, 1);
     light.position.set(0, 20, 10);
-    light.castShadow = true;
     scene.add(light);
 
     const ambient = new THREE.AmbientLight(0x404040);
     scene.add(ambient);
 
-    // Ground
-    const groundGeo = new THREE.BoxGeometry(12, 1, 400);
-    const groundMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
+    // Jungle Ground (brown path)
+    const groundGeo = new THREE.BoxGeometry(12, 1, 500);
+    const groundMat = new THREE.MeshStandardMaterial({ color: 0x4e2f1b });
     ground = new THREE.Mesh(groundGeo, groundMat);
-    ground.position.z = -180;
-    ground.receiveShadow = true;
+    ground.position.z = -200;
     scene.add(ground);
 
-    // Player
+    // Player (stone idol vibe)
     const playerGeo = new THREE.BoxGeometry(1.5, 2, 1.5);
-    const playerMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+    const playerMat = new THREE.MeshStandardMaterial({ color: 0xdedede });
     player = new THREE.Mesh(playerGeo, playerMat);
     player.position.y = 1;
-    player.castShadow = true;
     scene.add(player);
 
     spawnObstacle();
+    spawnCoin();
+    spawnTrees();
 
     window.addEventListener("resize", onResize);
 }
 
-// ===========================
-// SPAWN OBSTACLES
-// ===========================
+// ======================
+// JUNGLE TREES
+// ======================
+
+function spawnTrees() {
+
+    for (let i = 0; i < 40; i++) {
+
+        const trunkGeo = new THREE.CylinderGeometry(0.5, 0.5, 5);
+        const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5a3b1c });
+        const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+
+        trunk.position.x = (Math.random() > 0.5 ? 10 : -10);
+        trunk.position.y = 2.5;
+        trunk.position.z = -Math.random() * 400;
+
+        scene.add(trunk);
+
+        const leavesGeo = new THREE.SphereGeometry(3);
+        const leavesMat = new THREE.MeshStandardMaterial({ color: 0x0f7a0f });
+        const leaves = new THREE.Mesh(leavesGeo, leavesMat);
+
+        leaves.position.set(trunk.position.x, 6, trunk.position.z);
+
+        scene.add(leaves);
+    }
+}
+
+// ======================
+// OBSTACLES
+// ======================
 
 function spawnObstacle() {
 
     const geo = new THREE.BoxGeometry(2, 2, 2);
-    const mat = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+    const mat = new THREE.MeshStandardMaterial({ color: 0x552200 });
     const obstacle = new THREE.Mesh(geo, mat);
 
     const randomLane = Math.floor(Math.random() * 3) - 1;
     obstacle.position.x = randomLane * 4;
     obstacle.position.y = 1;
-    obstacle.position.z = -250;
-
-    obstacle.castShadow = true;
+    obstacle.position.z = -300;
 
     scene.add(obstacle);
     obstacles.push(obstacle);
 
-    setTimeout(spawnObstacle, 1200);
+    setTimeout(spawnObstacle, 1500);
 }
 
-// ===========================
-// ANIMATION LOOP
-// ===========================
+// ======================
+// COINS
+// ======================
+
+function spawnCoin() {
+
+    const geo = new THREE.TorusGeometry(0.7, 0.3, 16, 50);
+    const mat = new THREE.MeshStandardMaterial({ color: 0xffd700 });
+    const coin = new THREE.Mesh(geo, mat);
+
+    const randomLane = Math.floor(Math.random() * 3) - 1;
+    coin.position.x = randomLane * 4;
+    coin.position.y = 2;
+    coin.position.z = -250;
+
+    scene.add(coin);
+    coins.push(coin);
+
+    setTimeout(spawnCoin, 1000);
+}
+
+// ======================
+// ANIMATION
+// ======================
 
 function animate() {
     requestAnimationFrame(animate);
 
     if (gameStarted) {
 
-        // Smooth lane movement
+        speed += 0.0002;
+
         targetX = lane * 4;
         player.position.x += (targetX - player.position.x) * 0.2;
 
@@ -132,14 +180,34 @@ function animate() {
                 obstacles.splice(index, 1);
             }
 
-            // Collision
             if (
                 Math.abs(o.position.x - player.position.x) < 1.5 &&
                 Math.abs(o.position.z - player.position.z) < 1.5 &&
                 player.position.y < 2
             ) {
-                alert("Game Over");
+                alert("You hit an obstacle! Final Score: " + score);
                 location.reload();
+            }
+        });
+
+        // Move coins
+        coins.forEach((c, index) => {
+            c.rotation.x += 0.1;
+            c.rotation.y += 0.1;
+            c.position.z += speed;
+
+            if (
+                Math.abs(c.position.x - player.position.x) < 1.5 &&
+                Math.abs(c.position.z - player.position.z) < 1.5
+            ) {
+                scene.remove(c);
+                coins.splice(index, 1);
+                score += 10;
+            }
+
+            if (c.position.z > 10) {
+                scene.remove(c);
+                coins.splice(index, 1);
             }
         });
     }
@@ -147,9 +215,9 @@ function animate() {
     renderer.render(scene, camera);
 }
 
-// ===========================
-// MOBILE SWIPE CONTROLS
-// ===========================
+// ======================
+// SWIPE CONTROLS
+// ======================
 
 let touchStartX = 0;
 let touchStartY = 0;
@@ -163,13 +231,9 @@ window.addEventListener("touchend", (e) => {
 
     if (!gameStarted) return;
 
-    let touchEndX = e.changedTouches[0].clientX;
-    let touchEndY = e.changedTouches[0].clientY;
+    let dx = e.changedTouches[0].clientX - touchStartX;
+    let dy = e.changedTouches[0].clientY - touchStartY;
 
-    let dx = touchEndX - touchStartX;
-    let dy = touchEndY - touchStartY;
-
-    // Horizontal swipe = lane switch
     if (Math.abs(dx) > Math.abs(dy)) {
 
         if (dx > 50) lane++;
@@ -178,16 +242,11 @@ window.addEventListener("touchend", (e) => {
         lane = Math.max(-1, Math.min(1, lane));
     }
 
-    // Swipe up = jump
     if (dy < -50 && !isJumping) {
         isJumping = true;
         velocityY = 0.4;
     }
 });
-
-// ===========================
-// RESIZE
-// ===========================
 
 function onResize() {
     camera.aspect = window.innerWidth / window.innerHeight;
