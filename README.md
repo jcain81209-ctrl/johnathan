@@ -1,17 +1,15 @@
-# Temple Sprint (Browser Runner)
+# Temple Sprint (Nightmare Skill Mode)
 
-A Temple Run-inspired endless runner built with HTML5 Canvas and vanilla JavaScript.
+A Temple Run-inspired endless runner for browser (GitHub Pages-ready) with a heavier horror art direction.
 
-## Highlights
+## What changed
 
-- Stylized pseudo-3D jungle scene with a dark sky and layered trees
-- Brick temple road with dynamic gaps (jump timing challenge)
-- Detailed runner sprite with jump + slide states
-- Coin collection + escalating speed and score
-- Desktop keyboard controls
-- Mobile swipe controls and iOS tilt support
-- Fullscreen responsive layout for GitHub Pages
-- Best-score persistence with `localStorage`
+- Infernal nightmare visual theme (moon haze, fog layers, ember particles, ruins, skulls, ravens)
+- Stylized pseudo-3D brick road with abyss gaps
+- Expanded HUD with combo and streak tracking
+- FX quality toggle (`FX: HIGH/LOW`) for performance flexibility
+- Mobile-friendly controls with swipe handling that blocks browser scroll
+- iOS-compatible tilt permission flow
 
 ## Controls
 
@@ -28,7 +26,7 @@ A Temple Run-inspired endless runner built with HTML5 Canvas and vanilla JavaScr
 - Swipe left/right: change lane
 - Swipe up: jump
 - Swipe down: slide
-- Tap **Enable Tilt** to allow accelerometer lane steering (supported devices)
+- Tap **Enable Tilt** for accelerometer lane steering on supported devices
 
 ## Run locally
 
@@ -36,11 +34,11 @@ A Temple Run-inspired endless runner built with HTML5 Canvas and vanilla JavaScr
 python3 -m http.server 8000
 ```
 
-Open <http://localhost:8000>
+Open: <http://localhost:8000>
 
 ## Deploy to GitHub Pages
 
-1. Push these files to your GitHub repository root.
+1. Push files to repo root.
 2. In **Settings → Pages**, choose **Deploy from a branch**.
 3. Select `main` and `/ (root)`.
-4. Save and use the generated Pages URL.
+4. Save.
