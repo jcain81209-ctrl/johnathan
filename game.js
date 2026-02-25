@@ -9,9 +9,11 @@ const ui = {
   combo: document.getElementById('combo'),
   streak: document.getElementById('streak'),
   buffs: document.getElementById('buffs'),
+  fear: document.getElementById('fear'),
   pauseBtn: document.getElementById('pauseBtn'),
   tiltBtn: document.getElementById('tiltBtn'),
   fxBtn: document.getElementById('fxBtn'),
+  spriteBtn: document.getElementById('spriteBtn'),
   over: document.getElementById('gameOver'),
   finalScore: document.getElementById('finalScore'),
   finalCoins: document.getElementById('finalCoins'),
@@ -24,6 +26,7 @@ const MAX_Z = 72;
 const PLAYER_Z = 5;
 const BEST_KEY = 'templeSprintNightmareBest';
 const FX = { HIGH: 'HIGH', LOW: 'LOW' };
+const SPRITE_THEMES = ['HERO', 'WRAITH', 'GOLD'];
 
 const POWERUPS = {
   MAGNET: 'magnet',
@@ -78,6 +81,13 @@ function resetState() {
     bgScroll: 0,
     pulse: 0,
     shake: 0,
+    camBob: 0,
+    camYaw: 0,
+    roadCurve: 0.0,
+    worldTick: 0,
+    terror: 0,
+    eventTimer: rand(6, 11),
+    bloodRainT: 0,
 
     gapTimer: 0,
     coinTimer: 0,
@@ -90,6 +100,10 @@ function resetState() {
     magnetT: 0,
     speedBoostT: 0,
     invincibleT: 0,
+
+    spriteTheme: 'HERO',
+    spriteClock: 0,
+    spriteFrames: null,
 
     particles: Array.from({ length: 180 }, () => ({
       x: Math.random(), y: Math.random(), r: rand(0.4, 2), drift: rand(0.04, 0.2), a: rand(0.08, 0.28)
@@ -114,12 +128,14 @@ function resize() {
 function project(x, z, y = 0) {
   const w = window.innerWidth;
   const h = window.innerHeight;
-  const d = 1 - clamp(z / MAX_Z, 0, 1);
-  const s = 0.7 + d * 1.6;
+  const curveX = Math.sin((z + state.worldTick * 8) * 0.11) * state.roadCurve;
+  const depth = z * 0.12 + 0.55;
+  const persp = 1 / depth;
+  const worldX = x + curveX + state.camYaw;
   return {
-    x: w * 0.5 + x * s * w * 0.18,
-    y: h * (0.14 + d * 0.74) - y * s * h * 0.14,
-    scale: s
+    x: w * 0.5 + worldX * persp * w * 0.42,
+    y: h * 0.88 - (1.15 + y - state.camBob) * persp * h * 0.55,
+    scale: persp * 1.8
   };
 }
 
@@ -127,6 +143,77 @@ function runnerY() {
   if (state.jumpT <= 0) return 0;
   const t = 1 - state.jumpT;
   return Math.sin(Math.PI * t) * 1.8;
+}
+
+function buildRunnerSpriteSet(theme = 'HERO') {
+  const base = document.createElement('canvas');
+  base.width = 64;
+  base.height = 96;
+  const c = base.getContext('2d');
+
+  const palettes = {
+    HERO: { hair: '#ca5f34', skin: '#efcfac', shirt: '#d8c89f', pants: '#2f4d53', belt: '#6d4b36' },
+    WRAITH: { hair: '#dfe8ee', skin: '#c8d0d6', shirt: '#6a7a82', pants: '#24363b', belt: '#324044' },
+    GOLD: { hair: '#b85b2d', skin: '#f0d1b5', shirt: '#e0c971', pants: '#4f5036', belt: '#8d6f37' }
+  };
+  const P = palettes[theme] || palettes.HERO;
+
+  function drawFrame(armSwing = 0, legSwing = 0, jump = 0) {
+    c.clearRect(0, 0, 64, 96);
+    const cy = 62 - jump * 10;
+
+    c.strokeStyle = P.pants;
+    c.lineWidth = 8;
+    c.lineCap = 'round';
+    c.beginPath();
+    c.moveTo(30, cy);
+    c.lineTo(26 + legSwing, 88);
+    c.moveTo(34, cy);
+    c.lineTo(39 - legSwing, 87);
+    c.stroke();
+
+    c.fillStyle = P.shirt;
+    c.beginPath();
+    c.moveTo(20, cy - 2);
+    c.quadraticCurveTo(16, cy - 28, 32, cy - 42);
+    c.quadraticCurveTo(48, cy - 28, 44, cy - 2);
+    c.quadraticCurveTo(32, cy + 8, 20, cy - 2);
+    c.fill();
+
+    c.fillStyle = P.belt;
+    c.fillRect(21, cy - 2, 22, 4);
+
+    c.strokeStyle = P.skin;
+    c.lineWidth = 6;
+    c.beginPath();
+    c.moveTo(24, cy - 22);
+    c.lineTo(12 + armSwing, cy - 12);
+    c.moveTo(40, cy - 22);
+    c.lineTo(52 - armSwing, cy - 13);
+    c.stroke();
+
+    c.fillStyle = P.skin;
+    c.beginPath();
+    c.ellipse(32, cy - 50, 8, 9, 0, 0, Math.PI * 2);
+    c.fill();
+
+    c.fillStyle = P.hair;
+    c.beginPath();
+    c.arc(32, cy - 54, 8, Math.PI, Math.PI * 2);
+    c.fill();
+
+    const frame = document.createElement('canvas');
+    frame.width = 64;
+    frame.height = 96;
+    frame.getContext('2d').drawImage(base, 0, 0);
+    return frame;
+  }
+
+  return {
+    idle: [drawFrame(0, 0, 0)],
+    run: [drawFrame(-3, 2, 0), drawFrame(2, -2, 0), drawFrame(-1, 1, 0), drawFrame(3, -1, 0)],
+    jump: [drawFrame(1, 0, 1)]
+  };
 }
 
 function drawBg() {
@@ -198,6 +285,95 @@ function drawParticles() {
     ctx.arc(p.x * w, p.y * h, p.r, 0, Math.PI * 2);
     ctx.fill();
   }
+}
+
+
+function drawDepthWalls() {
+  for (let z = MAX_Z; z >= 2; z -= 1) {
+    const l1 = project(-1.45, z, -0.15);
+    const l2 = project(-1.75, z + 1, 0.05);
+    const r1 = project(1.45, z, -0.15);
+    const r2 = project(1.75, z + 1, 0.05);
+
+    ctx.fillStyle = z % 2 ? 'rgba(34,20,18,0.6)' : 'rgba(24,14,14,0.6)';
+    ctx.beginPath();
+    ctx.moveTo(l1.x, l1.y);
+    ctx.lineTo(l1.x - l1.scale * 20, l1.y + l1.scale * 24);
+    ctx.lineTo(l2.x - l2.scale * 24, l2.y + l2.scale * 20);
+    ctx.lineTo(l2.x, l2.y);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(r1.x, r1.y);
+    ctx.lineTo(r1.x + r1.scale * 20, r1.y + r1.scale * 24);
+    ctx.lineTo(r2.x + r2.scale * 24, r2.y + r2.scale * 20);
+    ctx.lineTo(r2.x, r2.y);
+    ctx.closePath();
+    ctx.fill();
+  }
+}
+
+function drawVolumetricLights() {
+  if (state.fx === FX.LOW) return;
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  for (let i = 0; i < 4; i += 1) {
+    const x = w * (0.15 + i * 0.23) + Math.sin(state.worldTick * 1.2 + i) * 30;
+    const y = h * 0.16;
+    const beam = ctx.createLinearGradient(x, y, x, h);
+    beam.addColorStop(0, 'rgba(255,145,95,0.11)');
+    beam.addColorStop(1, 'rgba(255,145,95,0)');
+    ctx.fillStyle = beam;
+    ctx.beginPath();
+    ctx.moveTo(x - 16, y);
+    ctx.lineTo(x + 16, y);
+    ctx.lineTo(x + 130, h);
+    ctx.lineTo(x - 130, h);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  if (state.bloodRainT > 0) {
+    ctx.fillStyle = 'rgba(180,20,20,0.09)';
+    ctx.fillRect(0, 0, w, h);
+  }
+}
+
+function drawBloodRain() {
+  if (state.fx === FX.LOW || state.bloodRainT <= 0) return;
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  for (let i = 0; i < 45; i += 1) {
+    const x = (i / 45) * w + Math.sin(state.worldTick * 6 + i) * 18;
+    const y = ((state.worldTick * 380 + i * 37) % (h + 80)) - 40;
+    ctx.strokeStyle = 'rgba(165,25,25,0.4)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x - 4, y + 16);
+    ctx.stroke();
+  }
+}
+
+function updateAdaptiveDirector(dt) {
+  state.eventTimer -= dt;
+  state.worldTick += dt;
+  const targetCurve = 0.08 + Math.sin(state.worldTick * 0.35) * 0.04;
+  state.roadCurve = lerp(state.roadCurve, targetCurve, dt * 0.7);
+
+  const danger = state.gaps.some((g) => g.z < 9 && g.z > 2) ? 1 : 0;
+  state.terror = lerp(state.terror, danger + (state.speed / 40), dt * 1.2);
+  state.camBob = Math.sin(state.worldTick * (7 + state.speed * 0.12)) * 0.03;
+  state.camYaw = Math.sin(state.worldTick * 0.8) * 0.06;
+
+  if (state.eventTimer <= 0) {
+    state.bloodRainT = rand(2.2, 4.5);
+    state.shake = 0.18;
+    state.eventTimer = rand(7, 13);
+  }
+  state.bloodRainT = Math.max(0, state.bloodRainT - dt);
+  state.shake = Math.max(0, state.shake - dt * 0.5);
 }
 
 function drawTrees() {
@@ -303,69 +479,24 @@ function drawRunner() {
   const s = p.scale * 20;
   const x = clamp(p.x, 28, window.innerWidth - 28);
 
-  // shadow
   ctx.fillStyle = 'rgba(0,0,0,0.35)';
   ctx.beginPath();
   ctx.ellipse(x, p.y + s * 0.85, s * 0.45, s * 0.16, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // sprint/idle blend
-  const anim = state.running ? Math.sin(state.pulse * (8 + state.speed * 0.1)) : 0;
-  const armSwing = anim * s * 0.06;
+  if (!state.spriteFrames) state.spriteFrames = buildRunnerSpriteSet(state.spriteTheme);
+  state.spriteClock += 0.016 * (state.speed / 12);
 
-  if (state.jumpT <= 0 && !state.running) {
-    // idle pose
-  }
+  const set = state.spriteFrames;
+  const frames = state.jumpT > 0.05 ? set.jump : set.run;
+  const frame = frames[Math.floor(state.spriteClock) % frames.length] || set.idle[0];
 
-  // jeans
-  ctx.strokeStyle = '#2f4d53';
-  ctx.lineWidth = Math.max(2, s * 0.12);
-  ctx.lineCap = 'round';
-  ctx.beginPath();
-  ctx.moveTo(x - s * 0.08, p.y + s * 0.06);
-  ctx.lineTo(x - s * 0.16, p.y + s * 0.9);
-  ctx.moveTo(x + s * 0.08, p.y + s * 0.06);
-  ctx.lineTo(x + s * 0.19, p.y + s * 0.88);
-  ctx.stroke();
+  const w = s * 1.6;
+  const h = s * 2.4;
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(frame, x - w / 2, p.y - h * 1.05, w, h);
+  ctx.imageSmoothingEnabled = true;
 
-  // tan shirt torso
-  ctx.fillStyle = '#d8c89f';
-  ctx.beginPath();
-  ctx.moveTo(x - s * 0.28, p.y - s * 0.06);
-  ctx.quadraticCurveTo(x - s * 0.36, p.y - s * 0.7, x, p.y - s * 0.98);
-  ctx.quadraticCurveTo(x + s * 0.36, p.y - s * 0.7, x + s * 0.3, p.y - s * 0.06);
-  ctx.quadraticCurveTo(x, p.y + s * 0.2, x - s * 0.28, p.y - s * 0.06);
-  ctx.fill();
-
-  // belt
-  ctx.fillStyle = '#6d4b36';
-  ctx.fillRect(x - s * 0.24, p.y - s * 0.055, s * 0.48, s * 0.08);
-  ctx.fillStyle = '#b9894e';
-  ctx.fillRect(x - s * 0.03, p.y - s * 0.048, s * 0.06, s * 0.05);
-
-  // skin arms
-  ctx.strokeStyle = '#cda27c';
-  ctx.lineWidth = Math.max(2, s * 0.1);
-  ctx.beginPath();
-  ctx.moveTo(x - s * 0.17, p.y - s * 0.6);
-  ctx.lineTo(x - s * 0.44 + armSwing, p.y - s * 0.33);
-  ctx.moveTo(x + s * 0.17, p.y - s * 0.6);
-  ctx.lineTo(x + s * 0.44 - armSwing, p.y - s * 0.31);
-  ctx.stroke();
-
-  // head
-  ctx.fillStyle = '#efcfac';
-  ctx.beginPath();
-  ctx.ellipse(x, p.y - s * 1.18, s * 0.18, s * 0.21, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // red hair
-  ctx.fillStyle = '#c95f34';
-  ctx.beginPath();
-  ctx.arc(x, p.y - s * 1.27, s * 0.18, Math.PI, Math.PI * 2);
-  ctx.fill();
-
-  // invincible aura lighting
   if (state.invincibleT > 0) {
     ctx.strokeStyle = 'rgba(180,255,225,0.6)';
     ctx.lineWidth = Math.max(2, s * 0.08);
@@ -431,6 +562,8 @@ function updateHud() {
   animateHud(ui.streak, String(state.streak));
   animateHud(ui.best, localStorage.getItem(BEST_KEY) || '0');
 
+  if (ui.fear) animateHud(ui.fear, `${Math.round(state.terror * 100)}%`);
+
   if (ui.buffs) {
     const buffs = [];
     if (state.magnetT > 0) buffs.push(`Magnet ${state.magnetT.toFixed(1)}s`);
@@ -461,6 +594,7 @@ function update(dt) {
 
   state.pulse += dt;
   state.graceT = Math.max(0, state.graceT - dt);
+  updateAdaptiveDirector(dt);
 
   state.magnetT = Math.max(0, state.magnetT - dt);
   state.speedBoostT = Math.max(0, state.speedBoostT - dt);
@@ -572,12 +706,34 @@ function drawPostFx() {
 }
 
 function draw() {
+  if (state.shake > 0 && state.fx === FX.HIGH) {
+    const mag = state.shake * 14;
+    ctx.save();
+    ctx.translate(rand(-mag, mag), rand(-mag * 0.6, mag * 0.6));
+    drawBg();
+    drawFogLighting();
+    drawVolumetricLights();
+    drawDepthWalls();
+    drawTrees();
+    drawRoad();
+    drawCollectibles();
+    drawRunner();
+    drawBloodRain();
+    drawParticles();
+    drawPostFx();
+    ctx.restore();
+    return;
+  }
+
   drawBg();
   drawFogLighting();
+  drawVolumetricLights();
+  drawDepthWalls();
   drawTrees();
   drawRoad();
   drawCollectibles();
   drawRunner();
+  drawBloodRain();
   drawParticles();
   drawPostFx();
 }
@@ -598,6 +754,7 @@ function restart() {
   state.fx = keepFx;
   if (ui.fxBtn) ui.fxBtn.textContent = `FX: ${state.fx}`;
   state.running = true;
+  state.spriteFrames = buildRunnerSpriteSet(state.spriteTheme);
   if (ui.over) ui.over.classList.add('hidden');
   if (ui.pauseBtn) { ui.pauseBtn.disabled = false; ui.pauseBtn.textContent = 'Pause'; }
   updateHud();
@@ -614,9 +771,17 @@ function toggleFx() {
   if (ui.fxBtn) ui.fxBtn.textContent = `FX: ${state.fx}`;
 }
 
+function cycleSpriteTheme() {
+  const idx = (SPRITE_THEMES.indexOf(state.spriteTheme) + 1) % SPRITE_THEMES.length;
+  state.spriteTheme = SPRITE_THEMES[idx];
+  state.spriteFrames = buildRunnerSpriteSet(state.spriteTheme);
+  if (ui.spriteBtn) ui.spriteBtn.textContent = `Sprite: ${state.spriteTheme}`;
+}
+
 if (ui.restartBtn) ui.restartBtn.addEventListener('click', restart);
 if (ui.pauseBtn) ui.pauseBtn.addEventListener('click', togglePause);
 if (ui.fxBtn) ui.fxBtn.addEventListener('click', toggleFx);
+if (ui.spriteBtn) ui.spriteBtn.addEventListener('click', cycleSpriteTheme);
 
 window.addEventListener('keydown', (e) => {
   if (!state.running || state.gameOver) return;
@@ -694,4 +859,5 @@ window.addEventListener('resize', resize);
 resetState();
 resize();
 restart();
+if (ui.spriteBtn) ui.spriteBtn.textContent = `Sprite: ${state.spriteTheme}`;
 requestAnimationFrame(loop);
