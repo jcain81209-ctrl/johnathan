@@ -5,8 +5,9 @@ A Temple Run-inspired endless runner for browser (GitHub Pages-ready) with a hea
 ## What changed
 
 - Infernal nightmare visual theme (moon haze, fog layers, ember particles, ruins, skulls, ravens)
+- Deeper pseudo-3D perspective camera with road curvature, depth walls, volumetric light shafts, blood-rain events
 - Stylized pseudo-3D brick road with abyss gaps
-- Expanded HUD with combo and streak tracking
+- Expanded HUD with combo, streak, buffs, and fear meter with animated transitions
 - FX quality toggle (`FX: HIGH/LOW`) for performance flexibility
 - Mobile-friendly controls with swipe handling that blocks browser scroll
 - iOS-compatible tilt permission flow
